@@ -1,4 +1,4 @@
-# Immigration Helper - All-in-One Platform for International Students in Germany
+﻿# Immigration Helper - All-in-One Platform for International Students in Germany
 
 🎯 **Mission:** Simplify the complex German immigration process for international students
 
@@ -60,7 +60,7 @@ MIT License - See [LICENSE](./LICENSE)
 - Student: TH Aschaffenburg (Software Design & Informatics)
 - Role: Square Health Digital (Data Protection & Compliance)
 - GitHub: [@lastiroko](https://github.com/lastiroko)
-- Website: [keeperapp.co.uk](https://keeperapp.co.uk) | [arenixcover.com](https://arenixcover.com)
+- Portfolio: [Landing App](https://github.com/lastiroko/Landing-app)
 
 ## 🌟 Portfolio Project
 
