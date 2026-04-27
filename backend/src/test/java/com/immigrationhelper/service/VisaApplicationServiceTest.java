@@ -265,6 +265,6 @@ class VisaApplicationServiceTest {
     }
 
     private ApplicationDto mockDto(UUID id, ApplicationStatus status) {
-        return new ApplicationDto(id, null, null, VisaType.STUDENT, status, null, null, null, null);
+        return new ApplicationDto(id, null, null, VisaType.STUDENT, status, null, null, null);
     }
 }

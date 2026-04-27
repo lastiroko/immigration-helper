@@ -5,13 +5,9 @@ import com.immigrationhelper.domain.enums.VisaType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -47,10 +43,6 @@ public class VisaApplication {
     @Column(nullable = false, length = 20)
     @Builder.Default
     private ApplicationStatus status = ApplicationStatus.DRAFT;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column
-    private List<Map<String, Object>> documents;
 
     @Column(length = 1000)
     private String notes;

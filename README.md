@@ -2,7 +2,7 @@
 
 A platform helping international students navigate German immigration bureaucracy.
 
-<!-- TODO: add CI badge once GitHub Actions workflow is in place -->
+![CI](https://github.com/lastiroko/immigration-helper/actions/workflows/ci.yml/badge.svg)
 
 ## What it does
 
