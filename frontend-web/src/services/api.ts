@@ -1,11 +1,12 @@
 import axios from 'axios';
-import type { 
-  AuthResponse, 
-  LoginRequest, 
-  RegisterRequest, 
+import type {
+  AuthResponse,
+  LoginRequest,
+  RegisterRequest,
   User,
   ImmigrationOffice,
-  VisaApplication 
+  VisaApplication,
+  StatusHistoryEntry
 } from '../types';
 
 const API_URL = 'http://localhost:8080/api/v1';
@@ -51,6 +52,12 @@ export const officeAPI = {
 export const visaAPI = {
   getMe: () =>
     api.get<VisaApplication[]>('/applications/me'),
+
+  getById: (id: string) =>
+    api.get<VisaApplication>(`/applications/${id}`),
+
+  getHistory: (id: string) =>
+    api.get<StatusHistoryEntry[]>(`/applications/${id}/history`),
 
   create: (data: { visaType: string; notes?: string; officeId?: number }) =>
     api.post<VisaApplication>('/applications', data),

@@ -1,4 +1,5 @@
 import Applications from './pages/Applications';
+import ApplicationDetail from './pages/ApplicationDetail';
 import NewApplication from './pages/NewApplication';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -24,6 +25,7 @@ function App() {
         <Routes>
 	  <Route path="/applications" element={<ProtectedRoute><Applications /></ProtectedRoute>} />
 	  <Route path="/applications/new" element={<ProtectedRoute><NewApplication /></ProtectedRoute>} />
+	  <Route path="/applications/:id" element={<ProtectedRoute><ApplicationDetail /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

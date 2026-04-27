@@ -3,28 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { visaAPI } from '../services/api';
 import type { VisaApplication, ApplicationStatus } from '../types';
-
-const VISA_LABELS: Record<string, string> = {
-  STUDENT:   'Student Visa',
-  WORK:      'Work Visa',
-  BLUE_CARD: 'EU Blue Card',
-  FAMILY:    'Family Reunion Visa',
-};
-
-const VISA_ICONS: Record<string, string> = {
-  STUDENT:   '🎓',
-  WORK:      '💼',
-  BLUE_CARD: '🔵',
-  FAMILY:    '👨‍👩‍👧',
-};
-
-const STATUS: Record<ApplicationStatus, { label: string; cls: string }> = {
-  DRAFT:     { label: 'Draft',     cls: 'bg-gray-100 text-gray-600' },
-  SUBMITTED: { label: 'Submitted', cls: 'bg-blue-100 text-blue-700' },
-  IN_REVIEW: { label: 'In Review', cls: 'bg-amber-100 text-amber-700' },
-  APPROVED:  { label: 'Approved',  cls: 'bg-green-100 text-green-700' },
-  REJECTED:  { label: 'Rejected',  cls: 'bg-red-100 text-red-700' },
-};
+import { STATUS_BADGE, formatDate, visaIcon, visaLabel } from '../lib/applicationDisplay';
 
 export default function Applications() {
   const { user, logout } = useAuth();
@@ -97,8 +76,8 @@ export default function Applications() {
             {(['SUBMITTED', 'IN_REVIEW', 'APPROVED', 'REJECTED'] as ApplicationStatus[]).map(s => (
               <div key={s} className="bg-white rounded-xl shadow-sm p-4 text-center">
                 <p className="text-2xl font-bold text-gray-900">{counts[s] ?? 0}</p>
-                <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS[s].cls}`}>
-                  {STATUS[s].label}
+                <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_BADGE[s].cls}`}>
+                  {STATUS_BADGE[s].label}
                 </span>
               </div>
             ))}
@@ -133,22 +112,18 @@ export default function Applications() {
         ) : (
           <div className="space-y-3">
             {applications.map(app => {
-              const status = STATUS[app.status];
-              const icon = VISA_ICONS[app.visaType] ?? '🛂';
-              const label = VISA_LABELS[app.visaType] ?? app.visaType;
-              const date = new Date(app.createdAt).toLocaleDateString('en-DE', {
-                day: 'numeric', month: 'long', year: 'numeric',
-              });
+              const status = STATUS_BADGE[app.status];
               return (
-                <div
+                <Link
                   key={app.id}
-                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow transition"
+                  to={`/applications/${app.id}`}
+                  className="block bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md hover:border-blue-200 transition"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="bg-blue-50 rounded-xl p-3 text-2xl shrink-0">{icon}</div>
+                    <div className="bg-blue-50 rounded-xl p-3 text-2xl shrink-0">{visaIcon(app.visaType)}</div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{label}</h3>
-                      <p className="text-sm text-gray-400 mt-0.5">Created {date}</p>
+                      <h3 className="font-semibold text-gray-900">{visaLabel(app.visaType)}</h3>
+                      <p className="text-sm text-gray-400 mt-0.5">Created {formatDate(app.createdAt)}</p>
                       {app.notes && (
                         <p className="text-sm text-gray-500 mt-1 line-clamp-1 max-w-xs">{app.notes}</p>
                       )}
@@ -157,7 +132,7 @@ export default function Applications() {
                   <span className={`self-start sm:self-auto px-3 py-1 rounded-full text-sm font-medium shrink-0 ${status.cls}`}>
                     {status.label}
                   </span>
-                </div>
+                </Link>
               );
             })}
           </div>

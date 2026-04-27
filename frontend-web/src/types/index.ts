@@ -58,6 +58,15 @@ export interface VisaApplication {
   updatedAt: string;
 }
 
+export interface StatusHistoryEntry {
+  id: string;
+  fromStatus: ApplicationStatus | null;
+  toStatus: ApplicationStatus;
+  changedByEmail: string;
+  changedAt: string;
+  note: string | null;
+}
+
 export interface Document {
   id: string;
   name: string;
