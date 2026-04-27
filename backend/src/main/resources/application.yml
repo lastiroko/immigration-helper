@@ -102,3 +102,6 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
   flyway:
     enabled: false
+
+jwt:
+  secret: test-only-secret-key-do-not-use-in-production-min-32-chars

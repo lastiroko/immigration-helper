@@ -9,7 +9,7 @@ import type {
   StatusHistoryEntry
 } from '../types';
 
-const API_URL = 'http://localhost:8080/api/v1';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -41,8 +41,8 @@ export const authAPI = {
 
 // Offices
 export const officeAPI = {
-  search: (params?: { city?: string; type?: string }) => 
-    api.get<ImmigrationOffice[]>('/offices', { params }),
+  search: (params?: { city?: string; type?: string }) =>
+    api.get<ImmigrationOffice[]>('/offices/nearest', { params }),
   
   getById: (id: string) => 
     api.get<ImmigrationOffice>(`/offices/${id}`),

@@ -2,30 +2,54 @@ package com.immigrationhelper.infrastructure.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Date;
 
 @Slf4j
 @Component
 public class JwtTokenProvider {
 
+    static final String PLACEHOLDER_SECRET =
+        "your-256-bit-secret-key-change-in-production-min-32-chars";
+
     private final SecretKey signingKey;
     private final long expirationMs;
     private final long refreshExpirationMs;
+    private final String secret;
+    private final Environment environment;
 
     public JwtTokenProvider(
         @Value("${jwt.secret}") String secret,
         @Value("${jwt.expiration-ms}") long expirationMs,
-        @Value("${jwt.refresh-expiration-ms}") long refreshExpirationMs
+        @Value("${jwt.refresh-expiration-ms}") long refreshExpirationMs,
+        Environment environment
     ) {
+        this.secret = secret;
         this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
         this.refreshExpirationMs = refreshExpirationMs;
+        this.environment = environment;
+    }
+
+    @PostConstruct
+    void verifySecret() {
+        if (!PLACEHOLDER_SECRET.equals(secret)) {
+            return;
+        }
+        boolean isDev = Arrays.asList(environment.getActiveProfiles()).contains("dev");
+        if (isDev) {
+            log.warn("JWT secret is the placeholder default — acceptable in dev profile only.");
+            return;
+        }
+        throw new IllegalStateException("JWT secret must be overridden in non-dev profiles");
     }
 
     public String generateToken(String email) {

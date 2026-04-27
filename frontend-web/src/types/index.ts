@@ -44,7 +44,7 @@ export interface ImmigrationOffice {
 }
 
 export type VisaType = 'STUDENT' | 'WORK' | 'BLUE_CARD' | 'FAMILY';
-export type ApplicationStatus = 'DRAFT' | 'SUBMITTED' | 'IN_REVIEW' | 'APPROVED' | 'REJECTED';
+export type ApplicationStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
 export interface VisaApplication {
   id: string;

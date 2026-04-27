@@ -72,8 +72,8 @@ export default function Applications() {
         </div>
 
         {!loading && applications.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-            {(['SUBMITTED', 'IN_REVIEW', 'APPROVED', 'REJECTED'] as ApplicationStatus[]).map(s => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+            {(['SUBMITTED', 'APPROVED', 'REJECTED'] as ApplicationStatus[]).map(s => (
               <div key={s} className="bg-white rounded-xl shadow-sm p-4 text-center">
                 <p className="text-2xl font-bold text-gray-900">{counts[s] ?? 0}</p>
                 <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_BADGE[s].cls}`}>
