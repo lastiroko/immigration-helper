@@ -2,12 +2,16 @@ package com.immigrationhelper.application.service;
 
 import com.immigrationhelper.application.dto.application.ApplicationDto;
 import com.immigrationhelper.application.dto.application.CreateApplicationRequest;
+import com.immigrationhelper.application.dto.application.StatusHistoryDto;
 import com.immigrationhelper.application.dto.application.UpdateStatusRequest;
+import com.immigrationhelper.application.mapper.StatusHistoryMapper;
 import com.immigrationhelper.application.mapper.VisaApplicationMapper;
+import com.immigrationhelper.domain.entity.ApplicationStatusHistory;
 import com.immigrationhelper.domain.entity.ImmigrationOffice;
 import com.immigrationhelper.domain.entity.User;
 import com.immigrationhelper.domain.entity.VisaApplication;
 import com.immigrationhelper.domain.enums.ApplicationStatus;
+import com.immigrationhelper.infrastructure.persistence.ApplicationStatusHistoryRepository;
 import com.immigrationhelper.infrastructure.persistence.ImmigrationOfficeRepository;
 import com.immigrationhelper.infrastructure.persistence.UserRepository;
 import com.immigrationhelper.infrastructure.persistence.VisaApplicationRepository;
@@ -32,7 +36,9 @@ public class VisaApplicationService {
     private final VisaApplicationRepository applicationRepository;
     private final UserRepository userRepository;
     private final ImmigrationOfficeRepository officeRepository;
+    private final ApplicationStatusHistoryRepository historyRepository;
     private final VisaApplicationMapper applicationMapper;
+    private final StatusHistoryMapper statusHistoryMapper;
 
     @Transactional
     public ApplicationDto create(CreateApplicationRequest request, String authenticatedEmail) {
@@ -53,6 +59,14 @@ public class VisaApplicationService {
             .build();
 
         application = applicationRepository.save(application);
+
+        historyRepository.save(ApplicationStatusHistory.builder()
+            .application(application)
+            .fromStatus(null)
+            .toStatus(application.getStatus())
+            .changedBy(user)
+            .build());
+
         log.info("Created visa application {} for user {}", application.getId(), user.getEmail());
         return applicationMapper.toDto(application);
     }
@@ -80,16 +94,42 @@ public class VisaApplicationService {
             .orElseThrow(() -> new EntityNotFoundException("Application not found: " + id));
 
         verifyOwnership(application, authentication.getName());
-        verifyStatusTransition(application.getStatus(), request.status(), authentication.getAuthorities());
+        ApplicationStatus from = application.getStatus();
+        verifyStatusTransition(from, request.status(), authentication.getAuthorities());
+
+        User changer = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new EntityNotFoundException("Authenticated user not found"));
 
         application.setStatus(request.status());
         if (request.notes() != null) {
             application.setNotes(request.notes());
         }
-
         application = applicationRepository.save(application);
-        log.info("Updated application {} status to {}", id, request.status());
+
+        historyRepository.save(ApplicationStatusHistory.builder()
+            .application(application)
+            .fromStatus(from)
+            .toStatus(request.status())
+            .changedBy(changer)
+            .note(request.notes())
+            .build());
+
+        log.info("Updated application {} status {} -> {} by {}", id, from, request.status(), changer.getEmail());
         return applicationMapper.toDto(application);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StatusHistoryDto> getHistory(UUID applicationId, Authentication authentication) {
+        VisaApplication application = applicationRepository.findById(applicationId)
+            .orElseThrow(() -> new EntityNotFoundException("Application not found: " + applicationId));
+
+        if (!isAdmin(authentication.getAuthorities())) {
+            verifyOwnership(application, authentication.getName());
+        }
+
+        return historyRepository.findByApplicationIdOrderByChangedAtAsc(applicationId).stream()
+            .map(statusHistoryMapper::toDto)
+            .toList();
     }
 
     private void verifyOwnership(VisaApplication application, String authenticatedEmail) {
@@ -102,23 +142,24 @@ public class VisaApplicationService {
                                          Collection<? extends GrantedAuthority> authorities) {
         if (current == next) return;
 
-        boolean isAdmin = authorities.stream()
-            .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-
-        // APPROVED and REJECTED are officer/admin-only target states
-        if ((next == ApplicationStatus.APPROVED || next == ApplicationStatus.REJECTED) && !isAdmin) {
+        if ((next == ApplicationStatus.APPROVED || next == ApplicationStatus.REJECTED) && !isAdmin(authorities)) {
             throw new AccessDeniedException("Only administrators can approve or reject applications");
         }
 
         boolean validTransition = switch (current) {
             case DRAFT     -> next == ApplicationStatus.SUBMITTED;
             case SUBMITTED -> next == ApplicationStatus.APPROVED || next == ApplicationStatus.REJECTED;
-            case APPROVED, REJECTED -> false; // terminal states
+            case APPROVED, REJECTED -> false;
         };
 
         if (!validTransition) {
             throw new IllegalArgumentException(
-                "Invalid status transition: " + current + " → " + next);
+                "Invalid status transition: " + current + " -> " + next);
         }
+    }
+
+    private boolean isAdmin(Collection<? extends GrantedAuthority> authorities) {
+        return authorities.stream()
+            .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
     }
 }

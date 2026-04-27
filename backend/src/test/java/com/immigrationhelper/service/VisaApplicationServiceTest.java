@@ -3,13 +3,16 @@ package com.immigrationhelper.service;
 import com.immigrationhelper.application.dto.application.ApplicationDto;
 import com.immigrationhelper.application.dto.application.CreateApplicationRequest;
 import com.immigrationhelper.application.dto.application.UpdateStatusRequest;
+import com.immigrationhelper.application.mapper.StatusHistoryMapper;
 import com.immigrationhelper.application.mapper.VisaApplicationMapper;
 import com.immigrationhelper.application.service.VisaApplicationService;
+import com.immigrationhelper.domain.entity.ApplicationStatusHistory;
 import com.immigrationhelper.domain.entity.User;
 import com.immigrationhelper.domain.entity.VisaApplication;
 import com.immigrationhelper.domain.enums.ApplicationStatus;
 import com.immigrationhelper.domain.enums.SubscriptionTier;
 import com.immigrationhelper.domain.enums.VisaType;
+import com.immigrationhelper.infrastructure.persistence.ApplicationStatusHistoryRepository;
 import com.immigrationhelper.infrastructure.persistence.ImmigrationOfficeRepository;
 import com.immigrationhelper.infrastructure.persistence.UserRepository;
 import com.immigrationhelper.infrastructure.persistence.VisaApplicationRepository;
@@ -39,7 +42,9 @@ class VisaApplicationServiceTest {
     @Mock VisaApplicationRepository applicationRepository;
     @Mock UserRepository userRepository;
     @Mock ImmigrationOfficeRepository officeRepository;
+    @Mock ApplicationStatusHistoryRepository historyRepository;
     @Mock VisaApplicationMapper applicationMapper;
+    @Mock StatusHistoryMapper statusHistoryMapper;
 
     @InjectMocks VisaApplicationService applicationService;
 
@@ -81,6 +86,7 @@ class VisaApplicationServiceTest {
         assertThat(result.id()).isEqualTo(applicationId);
         assertThat(result.status()).isEqualTo(ApplicationStatus.DRAFT);
         verify(userRepository).findByEmail("test@example.com");
+        verify(historyRepository).save(any(ApplicationStatusHistory.class));
     }
 
     @Test
@@ -133,6 +139,7 @@ class VisaApplicationServiceTest {
     void updateStatus_draftToSubmitted_byOwner_succeeds() {
         when(applicationRepository.findById(applicationId)).thenReturn(Optional.of(testApplication));
         when(applicationRepository.save(any())).thenReturn(testApplication);
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(applicationMapper.toDto(testApplication)).thenReturn(mockDto(applicationId, ApplicationStatus.SUBMITTED));
 
         ApplicationDto result = applicationService.updateStatus(
@@ -142,6 +149,7 @@ class VisaApplicationServiceTest {
         );
 
         assertThat(result.status()).isEqualTo(ApplicationStatus.SUBMITTED);
+        verify(historyRepository).save(any(ApplicationStatusHistory.class));
     }
 
     @Test
@@ -240,6 +248,7 @@ class VisaApplicationServiceTest {
             .visaType(VisaType.STUDENT).status(ApplicationStatus.SUBMITTED).build();
         when(applicationRepository.findById(applicationId)).thenReturn(Optional.of(submittedApp));
         when(applicationRepository.save(any())).thenReturn(submittedApp);
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
         when(applicationMapper.toDto(submittedApp)).thenReturn(mockDto(applicationId, ApplicationStatus.APPROVED));
 
         ApplicationDto result = applicationService.updateStatus(
@@ -249,6 +258,7 @@ class VisaApplicationServiceTest {
         );
 
         assertThat(result.status()).isEqualTo(ApplicationStatus.APPROVED);
+        verify(historyRepository).save(any(ApplicationStatusHistory.class));
     }
 
     private ApplicationDto mockDto(UUID id, ApplicationStatus status) {

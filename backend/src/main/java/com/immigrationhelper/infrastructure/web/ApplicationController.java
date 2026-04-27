@@ -2,6 +2,7 @@ package com.immigrationhelper.infrastructure.web;
 
 import com.immigrationhelper.application.dto.application.ApplicationDto;
 import com.immigrationhelper.application.dto.application.CreateApplicationRequest;
+import com.immigrationhelper.application.dto.application.StatusHistoryDto;
 import com.immigrationhelper.application.dto.application.UpdateStatusRequest;
 import com.immigrationhelper.application.service.VisaApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,5 +52,11 @@ public class ApplicationController {
                                         @Valid @RequestBody UpdateStatusRequest request,
                                         Authentication authentication) {
         return applicationService.updateStatus(id, request, authentication);
+    }
+
+    @GetMapping("/{id}/history")
+    @Operation(summary = "Get the chronological status history of a visa application")
+    public List<StatusHistoryDto> getHistory(@PathVariable UUID id, Authentication authentication) {
+        return applicationService.getHistory(id, authentication);
     }
 }
