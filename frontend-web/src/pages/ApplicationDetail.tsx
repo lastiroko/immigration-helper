@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { visaAPI } from '../services/api';
-import type { VisaApplication, StatusHistoryEntry } from '../types';
+import { documentAPI, visaAPI } from '../services/api';
+import type { ApplicationDocument, StatusHistoryEntry, VisaApplication } from '../types';
 import {
   STATUS_BADGE,
   formatDate,
@@ -11,10 +11,16 @@ import {
   visaIcon,
   visaLabel,
 } from '../lib/applicationDisplay';
+import DocumentUpload from '../components/DocumentUpload';
+import DocumentList from '../components/DocumentList';
+
+type DocumentsState =
+  | { kind: 'ok'; documents: ApplicationDocument[] }
+  | { kind: 'error'; message: string };
 
 type LoadState =
   | { kind: 'loading' }
-  | { kind: 'ok'; application: VisaApplication; history: StatusHistoryEntry[] }
+  | { kind: 'ok'; application: VisaApplication; history: StatusHistoryEntry[]; documents: DocumentsState }
   | { kind: 'not-found' }
   | { kind: 'error'; message: string };
 
@@ -29,9 +35,24 @@ export default function ApplicationDetail() {
   const load = () => {
     if (!id) return;
     setState({ kind: 'loading' });
-    Promise.all([visaAPI.getById(id), visaAPI.getHistory(id)])
-      .then(([appRes, histRes]) =>
-        setState({ kind: 'ok', application: appRes.data, history: histRes.data })
+    Promise.all([
+      visaAPI.getById(id),
+      visaAPI.getHistory(id),
+      documentAPI.list(id).then(
+        res => ({ kind: 'ok' as const, documents: res.data }),
+        (err: any) => ({
+          kind: 'error' as const,
+          message: err.response?.data?.message || 'Failed to load documents.',
+        })
+      ),
+    ])
+      .then(([appRes, histRes, documents]) =>
+        setState({
+          kind: 'ok',
+          application: appRes.data,
+          history: histRes.data,
+          documents,
+        })
       )
       .catch((err: any) => {
         const status = err.response?.status;
@@ -41,6 +62,29 @@ export default function ApplicationDetail() {
   };
 
   useEffect(load, [id]);
+
+  const handleUploadSuccess = (doc: ApplicationDocument) => {
+    setState(prev => {
+      if (prev.kind !== 'ok' || prev.documents.kind !== 'ok') return prev;
+      return {
+        ...prev,
+        documents: { kind: 'ok', documents: [doc, ...prev.documents.documents] },
+      };
+    });
+  };
+
+  const handleDocumentDelete = (docId: string) => {
+    setState(prev => {
+      if (prev.kind !== 'ok' || prev.documents.kind !== 'ok') return prev;
+      return {
+        ...prev,
+        documents: {
+          kind: 'ok',
+          documents: prev.documents.documents.filter(d => d.id !== docId),
+        },
+      };
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -108,15 +152,36 @@ export default function ApplicationDetail() {
           </div>
         )}
 
-        {state.kind === 'ok' && (
-          <DetailContent application={state.application} history={state.history} />
+        {state.kind === 'ok' && id && (
+          <DetailContent
+            applicationId={id}
+            application={state.application}
+            history={state.history}
+            documents={state.documents}
+            onUploadSuccess={handleUploadSuccess}
+            onDocumentDelete={handleDocumentDelete}
+          />
         )}
       </div>
     </div>
   );
 }
 
-function DetailContent({ application, history }: { application: VisaApplication; history: StatusHistoryEntry[] }) {
+function DetailContent({
+  applicationId,
+  application,
+  history,
+  documents,
+  onUploadSuccess,
+  onDocumentDelete,
+}: {
+  applicationId: string;
+  application: VisaApplication;
+  history: StatusHistoryEntry[];
+  documents: DocumentsState;
+  onUploadSuccess: (doc: ApplicationDocument) => void;
+  onDocumentDelete: (docId: string) => void;
+}) {
   const status = STATUS_BADGE[application.status];
 
   return (
@@ -157,6 +222,26 @@ function DetailContent({ application, history }: { application: VisaApplication;
           </dl>
         </section>
       )}
+
+      <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h3 className="font-semibold text-gray-800 mb-4">Documents</h3>
+        <div className="space-y-6">
+          <DocumentUpload applicationId={applicationId} onUploadSuccess={onUploadSuccess} />
+          <div className="border-t border-gray-100 pt-2">
+            {documents.kind === 'error' ? (
+              <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-sm">
+                {documents.message}
+              </div>
+            ) : (
+              <DocumentList
+                applicationId={applicationId}
+                documents={documents.documents}
+                onDelete={onDocumentDelete}
+              />
+            )}
+          </div>
+        </div>
+      </section>
 
       <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h3 className="font-semibold text-gray-800 mb-6">Status timeline</h3>

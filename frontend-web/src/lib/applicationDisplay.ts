@@ -1,4 +1,4 @@
-import type { ApplicationStatus, VisaType } from '../types';
+import type { ApplicationStatus, DocumentType, VisaType } from '../types';
 
 export const VISA_LABELS: Record<VisaType, string> = {
   STUDENT:   'Student Visa',
@@ -40,6 +40,44 @@ export function formatDateTime(iso: string): string {
     day: 'numeric', month: 'long', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
+}
+
+export const DOCUMENT_TYPE_LABEL: Record<DocumentType, string> = {
+  PASSPORT:               'Passport',
+  VISA:                   'Visa',
+  BIRTH_CERTIFICATE:      'Birth Certificate',
+  MARRIAGE_CERTIFICATE:   'Marriage Certificate',
+  PROOF_OF_INCOME:        'Proof of Income',
+  PROOF_OF_ADDRESS:       'Proof of Address',
+  HEALTH_INSURANCE:       'Health Insurance',
+  ENROLLMENT_CERTIFICATE: 'Enrollment Certificate',
+  EMPLOYMENT_CONTRACT:    'Employment Contract',
+  BANK_STATEMENT:         'Bank Statement',
+  PHOTO:                  'Photo',
+  OTHER:                  'Other',
+};
+
+export const DOCUMENT_TYPE_ICON: Record<DocumentType, string> = {
+  PASSPORT:               '📘',
+  VISA:                   '🛂',
+  BIRTH_CERTIFICATE:      '👶',
+  MARRIAGE_CERTIFICATE:   '💍',
+  PROOF_OF_INCOME:        '💶',
+  PROOF_OF_ADDRESS:       '🏠',
+  HEALTH_INSURANCE:       '🏥',
+  ENROLLMENT_CERTIFICATE: '🎓',
+  EMPLOYMENT_CONTRACT:    '📝',
+  BANK_STATEMENT:         '🏦',
+  PHOTO:                  '🖼️',
+  OTHER:                  '📄',
+};
+
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(kb < 10 ? 1 : 0)} KB`;
+  const mb = kb / 1024;
+  return `${mb.toFixed(mb < 10 ? 1 : 0)} MB`;
 }
 
 export function relativeTime(iso: string): string {

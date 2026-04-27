@@ -75,3 +75,27 @@ export interface Document {
   expiryDate?: string;
   url: string;
 }
+
+export type DocumentType =
+  | 'PASSPORT'
+  | 'VISA'
+  | 'BIRTH_CERTIFICATE'
+  | 'MARRIAGE_CERTIFICATE'
+  | 'PROOF_OF_INCOME'
+  | 'PROOF_OF_ADDRESS'
+  | 'HEALTH_INSURANCE'
+  | 'ENROLLMENT_CERTIFICATE'
+  | 'EMPLOYMENT_CONTRACT'
+  | 'BANK_STATEMENT'
+  | 'PHOTO'
+  | 'OTHER';
+
+export interface ApplicationDocument {
+  id: string;
+  documentType: DocumentType;
+  originalFilename: string;
+  contentType: string;
+  fileSize: number;
+  uploadedByEmail: string;
+  uploadedAt: string;
+}

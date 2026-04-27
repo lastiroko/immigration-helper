@@ -6,7 +6,9 @@ import type {
   User,
   ImmigrationOffice,
   VisaApplication,
-  StatusHistoryEntry
+  StatusHistoryEntry,
+  ApplicationDocument,
+  DocumentType
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1';
@@ -64,6 +66,32 @@ export const visaAPI = {
 
   updateStatus: (id: string, status: string) =>
     api.put<VisaApplication>(`/applications/${id}/status`, { status }),
+};
+
+// Application Documents
+export const documentAPI = {
+  list: (applicationId: string) =>
+    api.get<ApplicationDocument[]>(`/applications/${applicationId}/documents`),
+
+  upload: (applicationId: string, documentType: DocumentType, file: File) => {
+    const form = new FormData();
+    form.append('documentType', documentType);
+    form.append('file', file);
+    return api.post<ApplicationDocument>(
+      `/applications/${applicationId}/documents`,
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+  },
+
+  download: (applicationId: string, documentId: string) =>
+    api.get<Blob>(
+      `/applications/${applicationId}/documents/${documentId}/download`,
+      { responseType: 'blob' }
+    ),
+
+  delete: (applicationId: string, documentId: string) =>
+    api.delete<void>(`/applications/${applicationId}/documents/${documentId}`),
 };
 
 export default api;
