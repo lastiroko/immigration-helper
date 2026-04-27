@@ -60,7 +60,7 @@ MIT License - See [LICENSE](./LICENSE)
 - Student: TH Aschaffenburg (Software Design & Informatics)
 - Role: Square Health Digital (Data Protection & Compliance)
 - GitHub: [@lastiroko](https://github.com/lastiroko)
-- Portfolio: [Landing App](https://github.com/lastiroko/immigration-helper)
+- Portfolio: [immigration-helper](https://github.com/lastiroko/immigration-helper)
 
 ## 🌟 Portfolio Project
 
