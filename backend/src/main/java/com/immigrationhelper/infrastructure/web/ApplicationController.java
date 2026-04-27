@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,27 +27,29 @@ public class ApplicationController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create a new visa application")
-    public ApplicationDto createApplication(@Valid @RequestBody CreateApplicationRequest request) {
-        return applicationService.create(request);
+    @Operation(summary = "Create a new visa application for the authenticated user")
+    public ApplicationDto createApplication(@Valid @RequestBody CreateApplicationRequest request,
+                                             Authentication authentication) {
+        return applicationService.create(request, authentication.getName());
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get all visa applications belonging to the authenticated user")
+    public List<ApplicationDto> getMyApplications(Authentication authentication) {
+        return applicationService.getByAuthenticatedUser(authentication.getName());
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get visa application by ID")
-    public ApplicationDto getApplication(@PathVariable UUID id) {
-        return applicationService.getById(id);
-    }
-
-    @GetMapping("/user/{userId}")
-    @Operation(summary = "Get all visa applications for a user")
-    public List<ApplicationDto> getUserApplications(@PathVariable UUID userId) {
-        return applicationService.getByUserId(userId);
+    @Operation(summary = "Get a visa application by ID (must belong to the authenticated user)")
+    public ApplicationDto getApplication(@PathVariable UUID id, Authentication authentication) {
+        return applicationService.getById(id, authentication.getName());
     }
 
     @PutMapping("/{id}/status")
     @Operation(summary = "Update visa application status")
     public ApplicationDto updateStatus(@PathVariable UUID id,
-                                        @Valid @RequestBody UpdateStatusRequest request) {
-        return applicationService.updateStatus(id, request);
+                                        @Valid @RequestBody UpdateStatusRequest request,
+                                        Authentication authentication) {
+        return applicationService.updateStatus(id, request, authentication);
     }
 }
