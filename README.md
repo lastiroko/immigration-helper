@@ -56,11 +56,11 @@ MIT License - See [LICENSE](./LICENSE)
 
 ## 👨‍💻 Author
 
-**Philip Olaomo (Praise)**
+**Philip Olaomo **
 - Student: TH Aschaffenburg (Software Design & Informatics)
 - Role: Square Health Digital (Data Protection & Compliance)
 - GitHub: [@lastiroko](https://github.com/lastiroko)
-- Portfolio: [Landing App](https://github.com/lastiroko/Landing-app)
+- Portfolio: [Landing App](https://github.com/lastiroko/immigration-helper)
 
 ## 🌟 Portfolio Project
 
