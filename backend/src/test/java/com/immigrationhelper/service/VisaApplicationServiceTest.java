@@ -5,6 +5,7 @@ import com.immigrationhelper.application.dto.application.CreateApplicationReques
 import com.immigrationhelper.application.dto.application.UpdateStatusRequest;
 import com.immigrationhelper.application.mapper.StatusHistoryMapper;
 import com.immigrationhelper.application.mapper.VisaApplicationMapper;
+import com.immigrationhelper.application.service.ApplicationAccessGuard;
 import com.immigrationhelper.application.service.VisaApplicationService;
 import com.immigrationhelper.domain.entity.ApplicationStatusHistory;
 import com.immigrationhelper.domain.entity.User;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -45,6 +47,7 @@ class VisaApplicationServiceTest {
     @Mock ApplicationStatusHistoryRepository historyRepository;
     @Mock VisaApplicationMapper applicationMapper;
     @Mock StatusHistoryMapper statusHistoryMapper;
+    @Spy ApplicationAccessGuard accessGuard = new ApplicationAccessGuard();
 
     @InjectMocks VisaApplicationService applicationService;
 

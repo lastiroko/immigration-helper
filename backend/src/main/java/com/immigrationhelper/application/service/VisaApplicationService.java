@@ -39,6 +39,7 @@ public class VisaApplicationService {
     private final ApplicationStatusHistoryRepository historyRepository;
     private final VisaApplicationMapper applicationMapper;
     private final StatusHistoryMapper statusHistoryMapper;
+    private final ApplicationAccessGuard accessGuard;
 
     @Transactional
     public ApplicationDto create(CreateApplicationRequest request, String authenticatedEmail) {
@@ -75,7 +76,7 @@ public class VisaApplicationService {
     public ApplicationDto getById(UUID id, String authenticatedEmail) {
         VisaApplication application = applicationRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Application not found: " + id));
-        verifyOwnership(application, authenticatedEmail);
+        accessGuard.verifyOwnership(application, authenticatedEmail);
         return applicationMapper.toDto(application);
     }
 
@@ -93,7 +94,7 @@ public class VisaApplicationService {
         VisaApplication application = applicationRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Application not found: " + id));
 
-        verifyOwnership(application, authentication.getName());
+        accessGuard.verifyOwnership(application, authentication.getName());
         ApplicationStatus from = application.getStatus();
         verifyStatusTransition(from, request.status(), authentication.getAuthorities());
 
@@ -123,8 +124,8 @@ public class VisaApplicationService {
         VisaApplication application = applicationRepository.findById(applicationId)
             .orElseThrow(() -> new EntityNotFoundException("Application not found: " + applicationId));
 
-        if (!isAdmin(authentication.getAuthorities())) {
-            verifyOwnership(application, authentication.getName());
+        if (!accessGuard.isAdmin(authentication.getAuthorities())) {
+            accessGuard.verifyOwnership(application, authentication.getName());
         }
 
         return historyRepository.findByApplicationIdOrderByChangedAtAsc(applicationId).stream()
@@ -132,17 +133,11 @@ public class VisaApplicationService {
             .toList();
     }
 
-    private void verifyOwnership(VisaApplication application, String authenticatedEmail) {
-        if (!application.getUser().getEmail().equals(authenticatedEmail)) {
-            throw new AccessDeniedException("Access denied: application belongs to another user");
-        }
-    }
-
     private void verifyStatusTransition(ApplicationStatus current, ApplicationStatus next,
                                          Collection<? extends GrantedAuthority> authorities) {
         if (current == next) return;
 
-        if ((next == ApplicationStatus.APPROVED || next == ApplicationStatus.REJECTED) && !isAdmin(authorities)) {
+        if ((next == ApplicationStatus.APPROVED || next == ApplicationStatus.REJECTED) && !accessGuard.isAdmin(authorities)) {
             throw new AccessDeniedException("Only administrators can approve or reject applications");
         }
 
@@ -156,10 +151,5 @@ public class VisaApplicationService {
             throw new IllegalArgumentException(
                 "Invalid status transition: " + current + " -> " + next);
         }
-    }
-
-    private boolean isAdmin(Collection<? extends GrantedAuthority> authorities) {
-        return authorities.stream()
-            .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
     }
 }

@@ -2,6 +2,11 @@ spring:
   application:
     name: immigration-helper-backend
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
+
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/immigration_helper}
     username: ${DB_USERNAME:immigration_user}
@@ -48,6 +53,11 @@ stripe:
   webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_placeholder}
   premium-price-id: ${STRIPE_PREMIUM_PRICE_ID:price_placeholder}
   enterprise-price-id: ${STRIPE_ENTERPRISE_PRICE_ID:price_placeholder}
+
+app:
+  storage:
+    local:
+      base-path: ${APP_STORAGE_BASE_PATH:./uploads}
 
 springdoc:
   api-docs:
