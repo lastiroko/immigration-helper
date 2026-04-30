@@ -1,5 +1,6 @@
 package com.immigrationhelper.infrastructure.config;
 
+import com.immigrationhelper.application.exception.FeatureDisabledException;
 import com.immigrationhelper.application.exception.ResourceNotFoundException;
 import com.immigrationhelper.application.exception.ValidationException;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,6 +28,19 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
             HttpStatus.NOT_FOUND.value(),
             "Resource not found",
+            ex.getMessage(),
+            request.getDescription(false).replace("uri=", "")
+        );
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(FeatureDisabledException.class)
+    public ResponseEntity<ErrorResponse> handleFeatureDisabled(
+            FeatureDisabledException ex,
+            WebRequest request) {
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.NOT_FOUND.value(),
+            "Not found",
             ex.getMessage(),
             request.getDescription(false).replace("uri=", "")
         );

@@ -23,7 +23,10 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      # Flyway is authoritative for schema. Entities use JdbcTypeCode.JSON / .ARRAY
+      # which Hibernate maps differently from the literal jsonb / text[] columns we
+      # write in Flyway scripts, so 'validate' produces false positives.
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
