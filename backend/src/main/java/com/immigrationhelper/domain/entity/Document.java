@@ -1,13 +1,21 @@
 package com.immigrationhelper.domain.entity;
 
-import com.immigrationhelper.domain.enums.VisaType;
+import com.immigrationhelper.domain.enums.ApostilleStatus;
+import com.immigrationhelper.domain.enums.TranslationStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
-import java.util.Set;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
-@Table(name = "documents")
+@Table(name = "documents", indexes = {
+    @Index(name = "idx_documents_user_deleted", columnList = "user_id, deleted_at"),
+    @Index(name = "idx_documents_user_type", columnList = "user_id, type"),
+    @Index(name = "idx_documents_expiry", columnList = "expiry_date")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,25 +24,56 @@ import java.util.Set;
 public class Document {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
+    private UUID id;
 
-    @Column(nullable = false, length = 255)
-    private String name;
+    @Column(name = "user_id", nullable = false, columnDefinition = "uuid")
+    private UUID userId;
 
-    @Column(length = 1000)
-    private String description;
+    @NotBlank
+    @Column(nullable = false, length = 64)
+    private String type;
 
-    @ElementCollection(targetClass = VisaType.class)
-    @CollectionTable(name = "document_visa_types", joinColumns = @JoinColumn(name = "document_id"))
-    @Column(name = "visa_types")
+    @NotBlank
+    @Column(nullable = false, columnDefinition = "text")
+    private String title;
+
+    @NotBlank
+    @Column(name = "storage_ref", nullable = false, columnDefinition = "text")
+    private String storageRef;
+
+    @Column(name = "encrypted_key")
+    private byte[] encryptedKey;
+
+    @Column(name = "size_bytes", nullable = false)
+    private long sizeBytes;
+
+    @NotBlank
+    @Column(name = "mime_type", nullable = false, length = 64)
+    private String mimeType;
+
     @Enumerated(EnumType.STRING)
-    private Set<VisaType> visaTypes;
-
-    @Column(nullable = false)
+    @Column(name = "apostille_status", nullable = false, length = 16)
     @Builder.Default
-    private Boolean required = true;
+    private ApostilleStatus apostilleStatus = ApostilleStatus.NONE;
 
-    @Column(length = 500)
-    private String notes;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "translation_status", nullable = false, length = 16)
+    @Builder.Default
+    private TranslationStatus translationStatus = TranslationStatus.NONE;
+
+    @Column(name = "expiry_date")
+    private LocalDate expiryDate;
+
+    @Column(name = "is_original", nullable = false)
+    @Builder.Default
+    private boolean isOriginal = false;
+
+    @Column(name = "uploaded_at", nullable = false)
+    @Builder.Default
+    private LocalDateTime uploadedAt = LocalDateTime.now();
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

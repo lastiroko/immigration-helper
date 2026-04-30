@@ -117,14 +117,18 @@ class OnboardingIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.profile.citySlug").value("munich"))
             .andExpect(jsonPath("$.firstTasks").isArray())
+            .andExpect(jsonPath("$.journeys[0].type").value("STUDENT_ARRIVAL"))
             // Student in Munich gets all-applicable + STUDENT-specific templates,
             // ordered by priority (ANMELDUNG_REGISTER=5 first).
-            .andExpect(jsonPath("$.firstTasks[0]").value("ANMELDUNG_REGISTER"))
-            .andExpect(jsonPath("$.firstTasks", org.hamcrest.Matchers.hasItem("PASSPORT_VALID")))
-            .andExpect(jsonPath("$.firstTasks", org.hamcrest.Matchers.hasItem("SPERRKONTO_OPEN")))
-            .andExpect(jsonPath("$.firstTasks", org.hamcrest.Matchers.hasItem("UNI_MATRICULATE")))
-            .andExpect(jsonPath("$.firstTasks", org.hamcrest.Matchers.not(
-                org.hamcrest.Matchers.hasItem("ZAB_RECOGNITION"))));
+            .andExpect(jsonPath("$.firstTasks[0].templateCode").value("ANMELDUNG_REGISTER"))
+            .andExpect(jsonPath("$.firstTasks[*].templateCode",
+                org.hamcrest.Matchers.hasItem("PASSPORT_VALID")))
+            .andExpect(jsonPath("$.firstTasks[*].templateCode",
+                org.hamcrest.Matchers.hasItem("SPERRKONTO_OPEN")))
+            .andExpect(jsonPath("$.firstTasks[*].templateCode",
+                org.hamcrest.Matchers.hasItem("UNI_MATRICULATE")))
+            .andExpect(jsonPath("$.firstTasks[*].templateCode",
+                org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem("ZAB_RECOGNITION"))));
 
         // Notification defaults written
         assertThat(settingRepository.findById(chiamaka.getId())).isPresent();
