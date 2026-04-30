@@ -2,7 +2,7 @@ package com.immigrationhelper.infrastructure.web;
 
 import com.immigrationhelper.application.dto.payment.CheckoutSessionRequest;
 import com.immigrationhelper.application.dto.payment.SubscriptionStatusDto;
-import com.immigrationhelper.application.service.PaymentService;
+import com.immigrationhelper.application.service.BillingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,36 +16,35 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/payments")
+@RequestMapping("/api/v1/billing")
 @RequiredArgsConstructor
-@Tag(name = "Payments", description = "Stripe payment and subscription management")
-public class PaymentController {
+@Tag(name = "Billing", description = "Stripe checkout, subscriptions, and webhooks")
+public class BillingController {
 
-    private final PaymentService paymentService;
+    private final BillingService billingService;
 
-    @PostMapping("/create-checkout-session")
+    @PostMapping("/checkout-session")
     @ResponseStatus(HttpStatus.CREATED)
     @SecurityRequirement(name = "Bearer Authentication")
-    @Operation(summary = "Create Stripe checkout session for subscription upgrade")
+    @Operation(summary = "Create a Stripe Checkout session for subscription upgrade")
     public Map<String, String> createCheckoutSession(@Valid @RequestBody CheckoutSessionRequest request) {
-        String url = paymentService.createCheckoutSession(request);
-        return Map.of("checkoutUrl", url);
+        return Map.of("checkoutUrl", billingService.createCheckoutSession(request));
     }
 
     @PostMapping("/webhook")
-    @Operation(summary = "Stripe webhook endpoint — called by Stripe only")
+    @Operation(summary = "Stripe webhook endpoint (idempotent on event id)")
     public ResponseEntity<Void> handleWebhook(
         @RequestBody String payload,
         @RequestHeader("Stripe-Signature") String sigHeader
     ) {
-        paymentService.handleWebhook(payload, sigHeader);
+        billingService.handleWebhook(payload, sigHeader);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/subscription-status")
+    @GetMapping("/subscription")
     @SecurityRequirement(name = "Bearer Authentication")
-    @Operation(summary = "Get subscription status for a user")
+    @Operation(summary = "Get the current Stripe-backed subscription status for a user")
     public SubscriptionStatusDto getSubscriptionStatus(@RequestParam UUID userId) {
-        return paymentService.getSubscriptionStatus(userId);
+        return billingService.getSubscriptionStatus(userId);
     }
 }

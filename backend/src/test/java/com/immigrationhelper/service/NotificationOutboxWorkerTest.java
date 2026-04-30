@@ -4,6 +4,7 @@ import com.immigrationhelper.application.service.NotificationOutboxWorker;
 import com.immigrationhelper.domain.entity.NotificationOutbox;
 import com.immigrationhelper.domain.enums.NotificationKind;
 import com.immigrationhelper.domain.enums.OutboxStatus;
+import com.immigrationhelper.infrastructure.notification.PushNotificationService;
 import com.immigrationhelper.infrastructure.persistence.NotificationOutboxRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,19 +27,15 @@ import static org.mockito.Mockito.when;
 class NotificationOutboxWorkerTest {
 
     @Mock NotificationOutboxRepository repository;
+    @Mock PushNotificationService pushService;
     @InjectMocks NotificationOutboxWorker worker;
 
     @Test
     void drain_marksPendingRowsSent() {
-        NotificationOutbox row = NotificationOutbox.builder()
-            .userId(UUID.randomUUID())
-            .taskId(UUID.randomUUID())
-            .kind(NotificationKind.TASK_DUE)
-            .payload("{\"title\":\"X\"}")
-            .build();
-        row.setId(UUID.randomUUID());
+        NotificationOutbox row = newRow();
         when(repository.findByStatusAndScheduledAtBefore(eq(OutboxStatus.PENDING), any(LocalDateTime.class)))
             .thenReturn(List.of(row));
+        when(pushService.deliver(row)).thenReturn(true);
 
         int sent = worker.drain();
         assertThat(sent).isEqualTo(1);
@@ -56,5 +53,42 @@ class NotificationOutboxWorkerTest {
         when(repository.findByStatusAndScheduledAtBefore(eq(OutboxStatus.PENDING), any(LocalDateTime.class)))
             .thenReturn(List.of());
         assertThat(worker.drain()).isZero();
+    }
+
+    @Test
+    void drain_deliveryThrows_attemptsBumpedAndStaysPending() {
+        NotificationOutbox row = newRow();
+        when(repository.findByStatusAndScheduledAtBefore(eq(OutboxStatus.PENDING), any(LocalDateTime.class)))
+            .thenReturn(List.of(row));
+        when(pushService.deliver(row)).thenThrow(new RuntimeException("FCM down"));
+
+        worker.drain();
+        assertThat(row.getStatus()).isEqualTo(OutboxStatus.PENDING);
+        assertThat(row.getAttempts()).isEqualTo(1);
+        assertThat(row.getLastError()).isEqualTo("FCM down");
+    }
+
+    @Test
+    void drain_afterMaxAttempts_marksFailed() {
+        NotificationOutbox row = newRow();
+        row.setAttempts(4); // one more failure pushes to 5 = MAX
+        when(repository.findByStatusAndScheduledAtBefore(eq(OutboxStatus.PENDING), any(LocalDateTime.class)))
+            .thenReturn(List.of(row));
+        when(pushService.deliver(row)).thenThrow(new RuntimeException("perma-fail"));
+
+        worker.drain();
+        assertThat(row.getStatus()).isEqualTo(OutboxStatus.FAILED);
+        assertThat(row.getAttempts()).isEqualTo(5);
+    }
+
+    private static NotificationOutbox newRow() {
+        NotificationOutbox row = NotificationOutbox.builder()
+            .userId(UUID.randomUUID())
+            .taskId(UUID.randomUUID())
+            .kind(NotificationKind.TASK_DUE)
+            .payload("{\"title\":\"X\"}")
+            .build();
+        row.setId(UUID.randomUUID());
+        return row;
     }
 }

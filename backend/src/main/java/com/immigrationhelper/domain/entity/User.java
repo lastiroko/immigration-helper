@@ -1,6 +1,7 @@
 package com.immigrationhelper.domain.entity;
 
 import com.immigrationhelper.domain.enums.SubscriptionTier;
+import com.immigrationhelper.domain.enums.UserStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -46,6 +47,14 @@ public class User {
 
     @Column(length = 255)
     private String stripeCustomerId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    @Builder.Default
+    private UserStatus status = UserStatus.ACTIVE;
+
+    @Column(name = "scheduled_deletion_at")
+    private LocalDateTime scheduledDeletionAt;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

@@ -68,6 +68,11 @@ features:
   guidance:
     enabled: ${FEATURES_GUIDANCE_ENABLED:true}
 
+notifications:
+  push:
+    # Delivery driver. Options: logging (default), fcm, apns.
+    driver: ${NOTIFICATIONS_PUSH_DRIVER:logging}
+
 springdoc:
   api-docs:
     path: /api-docs

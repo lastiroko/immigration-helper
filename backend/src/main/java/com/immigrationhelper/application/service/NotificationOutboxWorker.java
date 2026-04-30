@@ -2,6 +2,7 @@ package com.immigrationhelper.application.service;
 
 import com.immigrationhelper.domain.entity.NotificationOutbox;
 import com.immigrationhelper.domain.enums.OutboxStatus;
+import com.immigrationhelper.infrastructure.notification.PushNotificationService;
 import com.immigrationhelper.infrastructure.persistence.NotificationOutboxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,20 +14,22 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Drains the notification_outbox: reads PENDING rows whose scheduled_at has passed,
- * "delivers" them (logging stub for MVP), and marks them SENT.
+ * Drains the notification_outbox: reads PENDING rows, delegates delivery to the
+ * configured {@link PushNotificationService}, and marks the row SENT or FAILED.
  *
- * FCM/APNS wiring lands in Phase 5. This worker exists now so the deadline engine
- * + downstream-task-release events have a durable destination from day one.
+ * Retries: a row that throws (or returns false) increments attempts; after 5
+ * failures it transitions to FAILED so it stops blocking the queue.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationOutboxWorker {
 
-    private final NotificationOutboxRepository repository;
+    private static final int MAX_ATTEMPTS = 5;
 
-    /** Runs every 60s in production; tests call {@link #drain()} directly. */
+    private final NotificationOutboxRepository repository;
+    private final PushNotificationService pushService;
+
     @Scheduled(fixedDelayString = "PT60S")
     public void scheduledDrain() {
         drain();
@@ -39,17 +42,20 @@ public class NotificationOutboxWorker {
         int sent = 0;
         for (NotificationOutbox row : pending) {
             try {
-                log.info("Outbox deliver: kind={} userId={} taskId={} payload={}",
-                    row.getKind(), row.getUserId(), row.getTaskId(), row.getPayload());
-                row.setStatus(OutboxStatus.SENT);
-                row.setSentAt(LocalDateTime.now());
+                boolean delivered = pushService.deliver(row);
                 row.setAttempts(row.getAttempts() + 1);
+                if (delivered) {
+                    row.setStatus(OutboxStatus.SENT);
+                    row.setSentAt(LocalDateTime.now());
+                    sent++;
+                } else if (row.getAttempts() >= MAX_ATTEMPTS) {
+                    row.setStatus(OutboxStatus.FAILED);
+                }
                 repository.save(row);
-                sent++;
             } catch (Exception e) {
                 row.setAttempts(row.getAttempts() + 1);
                 row.setLastError(e.getMessage());
-                if (row.getAttempts() >= 5) {
+                if (row.getAttempts() >= MAX_ATTEMPTS) {
                     row.setStatus(OutboxStatus.FAILED);
                 }
                 repository.save(row);
