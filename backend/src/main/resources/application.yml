@@ -1,6 +1,8 @@
 spring:
   application:
     name: immigration-helper-backend
+  profiles:
+    active: dev
 
   servlet:
     multipart:
@@ -58,6 +60,10 @@ app:
   storage:
     local:
       base-path: ${APP_STORAGE_BASE_PATH:./uploads}
+
+features:
+  guidance:
+    enabled: ${FEATURES_GUIDANCE_ENABLED:false}
 
 springdoc:
   api-docs:

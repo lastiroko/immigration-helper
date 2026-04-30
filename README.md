@@ -1,8 +1,10 @@
-# Immigration Helper
+# Immigration Helper → Helfa (migration in progress)
 
-A platform helping international students navigate German immigration bureaucracy.
+A platform helping international residents navigate German bureaucracy.
 
 ![CI](https://github.com/lastiroko/immigration-helper/actions/workflows/ci.yml/badge.svg)
+
+> **Pivot in flight (April 2026 → ).** This codebase is being refactored from a visa-application CRM (`VisaApplication` / status workflow / admin approval) into **Helfa**, a personalised guidance app that sequences German bureaucracy tasks for international residents. The plan is documented in `docs/Helfa_MigrationPlan_v1.docx` and the seven companion design docs in `docs/`. The migration is refactor-in-place over five phases, gated behind the `features.guidance.enabled` flag (default `false`); the legacy CRM domain stays live until Phase 4 cutover. Tag `pre-migration-baseline` marks the last commit before any migration code landed.
 
 ## What it does
 
@@ -145,6 +147,27 @@ Nine test classes cover:
 - App context smoke test — `ImmigrationHelperApplicationTest`
 
 The two `*AuthorizationTest` files specifically exercise the ownership and admin-gating rules added during the Phase 1 security audit.
+
+## Helfa migration
+
+The full plan is in `docs/Helfa_MigrationPlan_v1.docx`. Five phases:
+
+| Phase | Goal | Effort | Status |
+|------|------|--------|--------|
+| 1 | Foundations: feature flag, schema-only Flyway V6/V7/V8 (`user_profiles`, `notification_settings`, `cities`, `offices`, `task_templates`) | ~3 days | in progress |
+| 2 | User profile + onboarding endpoints, personalisation engine, seed Munich/Berlin/Stuttgart + 30 task templates | ~1 week | pending |
+| 3 | Journeys, tasks, documents (refactor `ApplicationDocument` → `Document`), deadline engine, notification outbox | ~1.5 weeks | pending |
+| 4 | Cutover: delete `application/` package, drop `visa_applications` / `application_status_history` / `application_documents` tables (destructive) | ~3 days | pending |
+| 5 | Marketplace + billing + FCM/APNS + GDPR export + OWASP scan | ~1 week | pending |
+
+Companion design docs in `docs/`:
+
+- `Helfa_PRD_v1.docx` — Product Requirements
+- `Helfa_UseCases_v1.docx`, `Helfa_UserJourneyFlowcharts_v1.docx`
+- `Helfa_Requirements_v1.docx` — Functional & Non-Functional
+- `Helfa_Wireframes_v1.docx`
+- `Helfa_DomainAPI_v1.docx` — entity model + REST endpoints
+- `Helfa_TestPlan_v1.docx`
 
 ## Roadmap
 
