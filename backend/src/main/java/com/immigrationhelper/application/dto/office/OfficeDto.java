@@ -1,18 +1,23 @@
 package com.immigrationhelper.application.dto.office;
 
-import java.time.LocalDateTime;
+import com.immigrationhelper.domain.enums.OfficeType;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
 
 public record OfficeDto(
-    Long id,
+    UUID id,
+    String citySlug,
+    String cityName,
+    OfficeType type,
     String name,
     String address,
-    String city,
-    String postalCode,
-    Double latitude,
-    Double longitude,
+    BigDecimal latitude,
+    BigDecimal longitude,
+    String bookingUrl,
     String phone,
     String email,
-    String appointmentUrl,
-    LocalDateTime createdAt,
+    List<String> languagesSupported,
     Double distanceKm
 ) {}

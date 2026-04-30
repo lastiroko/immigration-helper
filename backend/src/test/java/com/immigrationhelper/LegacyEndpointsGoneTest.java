@@ -9,25 +9,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Phase 4: the guidance flag is on by default. This test forces it off to prove the
- * kill-switch still works — useful for a hard rollback if the cutover discovers an
- * issue in production.
+ * Phase 4 exit criterion: the legacy CRM endpoints no longer exist. Calls to them must
+ * 404 (Spring's default for unmapped routes), not 401/403/500.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@TestPropertySource(properties = "features.guidance.enabled=false")
 @Transactional
-class GuidanceFeatureGateTest {
+class LegacyEndpointsGoneTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired UserRepository userRepository;
@@ -37,20 +36,41 @@ class GuidanceFeatureGateTest {
     @BeforeEach
     void setUp() {
         u = userRepository.save(User.builder()
-            .email("gate@test.com").name("Gate")
+            .email("legacy-gone@test.com").name("L")
             .passwordHash("$2a$12$irrelevant").subscriptionTier(SubscriptionTier.FREE).build());
     }
 
     @Test
-    void getProfile_whenFlagOff_returns404() throws Exception {
-        mockMvc.perform(get("/api/v1/users/me/profile")
+    void getApplications_returns404() throws Exception {
+        mockMvc.perform(get("/api/v1/applications/me")
                 .with(user(u.getEmail()).roles("FREE")))
             .andExpect(status().isNotFound());
     }
 
     @Test
-    void getNotificationSettings_whenFlagOff_returns404() throws Exception {
-        mockMvc.perform(get("/api/v1/users/me/notification-settings")
+    void getApplicationById_returns404() throws Exception {
+        mockMvc.perform(get("/api/v1/applications/" + UUID.randomUUID())
+                .with(user(u.getEmail()).roles("FREE")))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void postApplication_returns404() throws Exception {
+        mockMvc.perform(post("/api/v1/applications")
+                .with(user(u.getEmail()).roles("FREE")))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getApplicationDocuments_returns404() throws Exception {
+        mockMvc.perform(get("/api/v1/applications/" + UUID.randomUUID() + "/documents")
+                .with(user(u.getEmail()).roles("FREE")))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getApplicationHistory_returns404() throws Exception {
+        mockMvc.perform(get("/api/v1/applications/" + UUID.randomUUID() + "/history")
                 .with(user(u.getEmail()).roles("FREE")))
             .andExpect(status().isNotFound());
     }

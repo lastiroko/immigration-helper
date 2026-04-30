@@ -15,7 +15,8 @@ class FeatureFlagsDefaultTest {
     FeatureFlags flags;
 
     @Test
-    void guidanceFlagDefaultsToFalse() {
-        assertThat(flags.guidance().enabled()).isFalse();
+    void guidanceFlagDefaultsToTrue() {
+        // Phase 4 cutover: Helfa is now the primary product, so the flag is on by default.
+        assertThat(flags.guidance().enabled()).isTrue();
     }
 }

@@ -13,4 +13,6 @@ import java.util.UUID;
 public interface HelfaOfficeRepository extends JpaRepository<HelfaOffice, UUID> {
     List<HelfaOffice> findByCityId(UUID cityId);
     Optional<HelfaOffice> findByCityIdAndType(UUID cityId, OfficeType type);
+    List<HelfaOffice> findByCity_SlugIgnoreCase(String slug);
+    List<HelfaOffice> findByCity_NameContainingIgnoreCase(String cityName);
 }

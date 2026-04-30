@@ -2,23 +2,25 @@ package com.immigrationhelper.application.service;
 
 import com.immigrationhelper.application.dto.office.OfficeDto;
 import com.immigrationhelper.application.mapper.OfficeMapper;
-import com.immigrationhelper.domain.entity.ImmigrationOffice;
-import com.immigrationhelper.infrastructure.persistence.ImmigrationOfficeRepository;
+import com.immigrationhelper.domain.entity.HelfaOffice;
+import com.immigrationhelper.infrastructure.persistence.HelfaOfficeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class OfficeService {
 
-    private final ImmigrationOfficeRepository officeRepository;
+    private final HelfaOfficeRepository officeRepository;
     private final OfficeMapper officeMapper;
 
     @Transactional(readOnly = true)
@@ -29,7 +31,7 @@ public class OfficeService {
     }
 
     @Transactional(readOnly = true)
-    public OfficeDto getById(Long id) {
+    public OfficeDto getById(UUID id) {
         return officeRepository.findById(id)
             .map(officeMapper::toDto)
             .orElseThrow(() -> new EntityNotFoundException("Office not found: " + id));
@@ -39,26 +41,32 @@ public class OfficeService {
     public List<OfficeDto> getNearestOffices(String city, Double lat, Double lon, int limit) {
         if (lat != null && lon != null) {
             return officeRepository.findAll().stream()
-                .map(office -> {
-                    double dist = haversineKm(lat, lon, office.getLatitude(), office.getLongitude());
-                    return officeMapper.toDtoWithDistance(office, dist);
-                })
+                .map(office -> officeMapper.toDtoWithDistance(office, distanceKmTo(lat, lon, office)))
                 .sorted(Comparator.comparingDouble(o -> o.distanceKm() != null ? o.distanceKm() : Double.MAX_VALUE))
                 .limit(limit)
                 .toList();
         }
 
         if (city != null && !city.isBlank()) {
-            return officeRepository.findByCityContainingIgnoreCase(city).stream()
-                .map(officeMapper::toDto)
-                .limit(limit)
-                .toList();
+            // Treat the parameter as a city slug first; fall back to a name-contains match.
+            List<HelfaOffice> hits = officeRepository.findByCity_SlugIgnoreCase(city);
+            if (hits.isEmpty()) {
+                hits = officeRepository.findByCity_NameContainingIgnoreCase(city);
+            }
+            return hits.stream().map(officeMapper::toDto).limit(limit).toList();
         }
 
         return getAllOffices().stream().limit(limit).toList();
     }
 
-    private double haversineKm(double lat1, double lon1, double lat2, double lon2) {
+    private static Double distanceKmTo(double fromLat, double fromLon, HelfaOffice office) {
+        BigDecimal lat = office.getLatitude();
+        BigDecimal lon = office.getLongitude();
+        if (lat == null || lon == null) return null;
+        return haversineKm(fromLat, fromLon, lat.doubleValue(), lon.doubleValue());
+    }
+
+    private static double haversineKm(double lat1, double lon1, double lat2, double lon2) {
         final int R = 6371;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);

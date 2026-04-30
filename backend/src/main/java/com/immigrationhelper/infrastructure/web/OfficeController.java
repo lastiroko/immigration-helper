@@ -8,29 +8,30 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/offices")
 @RequiredArgsConstructor
-@Tag(name = "Immigration Offices", description = "Find and browse immigration offices in Germany")
+@Tag(name = "Offices", description = "Browse Helfa-supported authority offices")
 public class OfficeController {
 
     private final OfficeService officeService;
 
     @GetMapping
-    @Operation(summary = "Get all immigration offices")
+    @Operation(summary = "List all offices")
     public List<OfficeDto> getAllOffices() {
         return officeService.getAllOffices();
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get immigration office by ID")
-    public OfficeDto getOffice(@PathVariable Long id) {
+    @Operation(summary = "Get an office by id")
+    public OfficeDto getOffice(@PathVariable UUID id) {
         return officeService.getById(id);
     }
 
     @GetMapping("/nearest")
-    @Operation(summary = "Find nearest offices by GPS coordinates or city name")
+    @Operation(summary = "Find nearest offices by city slug, city name, or GPS coordinates")
     public List<OfficeDto> getNearestOffices(
         @RequestParam(required = false) String city,
         @RequestParam(required = false) Double lat,

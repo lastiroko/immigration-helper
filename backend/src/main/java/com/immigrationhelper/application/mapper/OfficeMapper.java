@@ -1,23 +1,31 @@
 package com.immigrationhelper.application.mapper;
 
 import com.immigrationhelper.application.dto.office.OfficeDto;
-import com.immigrationhelper.domain.entity.ImmigrationOffice;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
+import com.immigrationhelper.domain.entity.HelfaOffice;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public interface OfficeMapper {
+@Component
+public class OfficeMapper {
 
-    @Mapping(target = "distanceKm", ignore = true)
-    OfficeDto toDto(ImmigrationOffice office);
+    public OfficeDto toDto(HelfaOffice office) {
+        return toDtoWithDistance(office, null);
+    }
 
-    default OfficeDto toDtoWithDistance(ImmigrationOffice office, Double distanceKm) {
-        OfficeDto dto = toDto(office);
+    public OfficeDto toDtoWithDistance(HelfaOffice office, Double distanceKm) {
         return new OfficeDto(
-            dto.id(), dto.name(), dto.address(), dto.city(), dto.postalCode(),
-            dto.latitude(), dto.longitude(), dto.phone(), dto.email(),
-            dto.appointmentUrl(), dto.createdAt(), distanceKm
+            office.getId(),
+            office.getCity() == null ? null : office.getCity().getSlug(),
+            office.getCity() == null ? null : office.getCity().getName(),
+            office.getType(),
+            office.getName(),
+            office.getAddress(),
+            office.getLatitude(),
+            office.getLongitude(),
+            office.getBookingUrl(),
+            office.getPhone(),
+            office.getEmail(),
+            office.getLanguagesSupported(),
+            distanceKm
         );
     }
 }

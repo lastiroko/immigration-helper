@@ -7,7 +7,7 @@ public record FeatureFlags(Guidance guidance) {
 
     public FeatureFlags {
         if (guidance == null) {
-            guidance = new Guidance(false);
+            guidance = new Guidance(true);
         }
     }
 

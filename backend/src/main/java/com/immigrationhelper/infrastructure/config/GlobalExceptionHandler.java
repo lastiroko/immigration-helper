@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -29,6 +30,21 @@ public class GlobalExceptionHandler {
             HttpStatus.NOT_FOUND.value(),
             "Resource not found",
             ex.getMessage(),
+            request.getDescription(false).replace("uri=", "")
+        );
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResource(
+            NoResourceFoundException ex,
+            WebRequest request) {
+        // Spring Boot 3 routes unmapped paths through ResourceHttpRequestHandler,
+        // which throws this exception. Translate to a real 404.
+        ErrorResponse error = new ErrorResponse(
+            HttpStatus.NOT_FOUND.value(),
+            "Not found",
+            "Endpoint does not exist",
             request.getDescription(false).replace("uri=", "")
         );
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
