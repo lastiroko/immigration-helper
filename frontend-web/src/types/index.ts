@@ -1,9 +1,9 @@
+// ── Auth ────────────────────────────────────────────────────────────────────
 export interface User {
   id: string;
   email: string;
   name: string;
-  subscriptionTier: 'FREE' | 'BASIC' | 'PREMIUM';
-  subscriptionStatus?: 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
+  subscriptionTier: 'FREE' | 'PREMIUM' | 'ENTERPRISE';
   createdAt?: string;
 }
 
@@ -15,87 +15,148 @@ export interface AuthResponse {
   userId: string;
   email: string;
   name: string;
-  subscriptionTier: 'FREE' | 'BASIC' | 'PREMIUM';
+  subscriptionTier: User['subscriptionTier'];
 }
 
-export interface LoginRequest {
-  email: string;
-  password: string;
+export interface LoginRequest { email: string; password: string; }
+export interface RegisterRequest { email: string; password: string; name: string; }
+
+// ── Profile + onboarding ────────────────────────────────────────────────────
+export type VisaPathway = 'STUDENT' | 'CHANCENKARTE' | 'BLUE_CARD' | 'FAMILY_REUNION' | 'REFUGEE' | 'OTHER';
+export type FamilyStatus = 'SINGLE' | 'PARTNERED' | 'MARRIED' | 'PARENT';
+
+export interface UserProfile {
+  userId: string;
+  firstName: string | null;
+  nationality: string | null;
+  cityId: string | null;
+  citySlug: string | null;
+  visaPathway: VisaPathway | null;
+  familyStatus: FamilyStatus | null;
+  familyInGermany: boolean;
+  arrivalDate: string | null;
+  anmeldungDate: string | null;
+  permitExpiryDate: string | null;
 }
 
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  name: string;
+export interface OnboardingStepRequest {
+  firstName?: string;
+  nationality?: string;
+  cityId?: string;
+  citySlug?: string;
+  visaPathway?: VisaPathway;
+  familyStatus?: FamilyStatus;
+  familyInGermany?: boolean;
+  arrivalDate?: string;
+  anmeldungDate?: string;
+  permitExpiryDate?: string;
+  arrivalTimeline?: string;
 }
 
-export interface ImmigrationOffice {
+export interface OnboardingFinalizeResponse {
+  profile: UserProfile;
+  journeys: UserJourney[];
+  firstTasks: TaskDto[];
+}
+
+// ── Journeys + tasks ────────────────────────────────────────────────────────
+export type JourneyType = 'STUDENT_ARRIVAL' | 'JOBSEEKER_TO_WORK' | 'RENEWAL' | 'FAMILY_REUNION' | 'PR_CITIZENSHIP';
+export type JourneyStatus = 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
+
+export interface UserJourney {
   id: string;
-  name: string;
-  city: string;
-  address: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  appointmentUrl?: string;
-  type: 'AUSLAENDERBEHORDE' | 'BAMF' | 'EMBASSY';
-  openingHours?: string;
-  averageWaitTime?: number;
+  type: JourneyType;
+  status: JourneyStatus;
+  startedAt: string;
+  expectedEndAt: string | null;
+  completedAt: string | null;
 }
 
-export type VisaType = 'STUDENT' | 'WORK' | 'BLUE_CARD' | 'FAMILY';
-export type ApplicationStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
+export type TaskStatus = 'UPCOMING' | 'DUE' | 'OVERDUE' | 'COMPLETE' | 'SKIPPED';
 
-export interface VisaApplication {
+export interface TaskDto {
   id: string;
-  user: { id: string; email: string; name: string };
-  office?: { id: number; name: string; city: string };
-  visaType: VisaType;
-  status: ApplicationStatus;
-  documents?: Record<string, unknown>[];
-  notes?: string;
+  journeyId: string;
+  templateCode: string;
+  title: string;
+  description: string;
+  dueAt: string | null;
+  status: TaskStatus;
+  priority: number;
+  completedAt: string | null;
+  postponedUntil: string | null;
   createdAt: string;
-  updatedAt: string;
 }
 
-export interface StatusHistoryEntry {
-  id: string;
-  fromStatus: ApplicationStatus | null;
-  toStatus: ApplicationStatus;
-  changedByEmail: string;
-  changedAt: string;
-  note: string | null;
+export interface TaskListResponse {
+  items: TaskDto[];
+  page: number;
+  size: number;
+  total: number;
 }
 
-export interface Document {
+// ── Marketplace ─────────────────────────────────────────────────────────────
+export type PartnerCategory = 'BANK' | 'INSURANCE' | 'HOUSING' | 'TRANSLATION' | 'LEGAL' | 'LANGUAGE' | 'RELOCATION' | 'TAX' | 'OTHER';
+
+export interface PartnerCard {
   id: string;
+  slug: string;
   name: string;
-  type: string;
-  uploadedAt: string;
-  expiryDate?: string;
-  url: string;
+  category: PartnerCategory;
+  logoUrl: string | null;
+  commissionDisclosure: string;
+  rating: number | null;
 }
 
-export type DocumentType =
-  | 'PASSPORT'
-  | 'VISA'
-  | 'BIRTH_CERTIFICATE'
-  | 'MARRIAGE_CERTIFICATE'
-  | 'PROOF_OF_INCOME'
-  | 'PROOF_OF_ADDRESS'
-  | 'HEALTH_INSURANCE'
-  | 'ENROLLMENT_CERTIFICATE'
-  | 'EMPLOYMENT_CONTRACT'
-  | 'BANK_STATEMENT'
-  | 'PHOTO'
-  | 'OTHER';
+export interface PartnerDetail extends PartnerCard {
+  websiteUrl: string;
+  supportedNationalities: string[];
+}
 
-export interface ApplicationDocument {
+export interface PartnerClickResponse {
+  clickId: string;
+  redirectUrl: string;
+}
+
+// ── Offices (new shape) ─────────────────────────────────────────────────────
+export type OfficeType = 'BURGERAMT' | 'AUSLANDERBEHORDE' | 'FINANZAMT' | 'STANDESAMT'
+  | 'JOBCENTER' | 'FAMILIENKASSE' | 'WOHNUNGSAMT' | 'FUHRERSCHEINSTELLE';
+
+export interface OfficeDto {
   id: string;
-  documentType: DocumentType;
-  originalFilename: string;
-  contentType: string;
-  fileSize: number;
-  uploadedByEmail: string;
+  citySlug: string | null;
+  cityName: string | null;
+  type: OfficeType;
+  name: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+  bookingUrl: string | null;
+  phone: string | null;
+  email: string | null;
+  languagesSupported: string[];
+  distanceKm: number | null;
+}
+
+// ── Vault documents ─────────────────────────────────────────────────────────
+export type ApostilleStatus = 'NONE' | 'NOT_APPLICABLE' | 'PENDING' | 'DONE';
+export type TranslationStatus = ApostilleStatus;
+
+export interface VaultDocumentDto {
+  id: string;
+  type: string;
+  title: string;
+  sizeBytes: number;
+  mimeType: string;
+  apostilleStatus: ApostilleStatus;
+  translationStatus: TranslationStatus;
+  expiryDate: string | null;
+  isOriginal: boolean;
   uploadedAt: string;
+}
+
+export interface VaultDocumentListResponse {
+  items: VaultDocumentDto[];
+  quotaUsedBytes: number;
+  quotaLimitBytes: number;
 }

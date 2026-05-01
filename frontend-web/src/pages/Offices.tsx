@@ -1,198 +1,73 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { officeAPI } from '../services/api';
-import type { ImmigrationOffice } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import { Header } from './Tasks';
+import type { OfficeDto } from '../types';
 
-const TYPE_LABEL: Record<ImmigrationOffice['type'], string> = {
-  AUSLAENDERBEHORDE: 'Foreigners Office',
-  BAMF: 'BAMF',
-  EMBASSY: 'Embassy',
-};
+const CITIES = ['ALL', 'munich', 'berlin', 'stuttgart'] as const;
 
 export default function Offices() {
-  const [offices, setOffices] = useState<ImmigrationOffice[]>([]);
+  const [offices, setOffices] = useState<OfficeDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [city, setCity] = useState<typeof CITIES[number]>('ALL');
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
-  const [searchInput, setSearchInput] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [cityFilter, setCityFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [city]);
 
-  useEffect(() => {
-    officeAPI.search()
-      .then(res => setOffices(res.data))
-      .catch(() => setError('Failed to load offices. Please try again.'))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(searchInput), 300);
-    return () => clearTimeout(t);
-  }, [searchInput]);
-
-  const cityOptions = useMemo(
-    () => Array.from(new Set(offices.map(o => o.city))).sort((a, b) => a.localeCompare(b)),
-    [offices],
-  );
-
-  const typeOptions = useMemo(
-    () => Array.from(new Set(offices.map(o => o.type))).sort((a, b) => a.localeCompare(b)),
-    [offices],
-  );
-
-  const filtered = useMemo(() => {
-    const q = debouncedSearch.trim().toLowerCase();
-    return offices.filter(o => {
-      if (q && !o.name.toLowerCase().includes(q)) return false;
-      if (cityFilter && o.city !== cityFilter) return false;
-      if (typeFilter && o.type !== typeFilter) return false;
-      return true;
-    });
-  }, [offices, debouncedSearch, cityFilter, typeFilter]);
-
-  const hasActiveFilter = Boolean(searchInput || cityFilter || typeFilter);
-
-  const clearFilters = () => {
-    setSearchInput('');
-    setCityFilter('');
-    setTypeFilter('');
-  };
+  async function load() {
+    setLoading(true);
+    try {
+      const r = city === 'ALL'
+        ? await officeAPI.list()
+        : await officeAPI.nearest({ city, limit: 50 });
+      setOffices(r.data);
+    } finally { setLoading(false); }
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Immigration Offices</h1>
+    <div className="min-h-screen bg-gray-50">
+      <Header onLogout={() => { logout(); navigate('/login'); }} />
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Offices</h1>
+        <p className="text-gray-600 mb-6">Bürgerämter, Ausländerbehörden, Finanzämter and other authorities Helfa supports.</p>
 
-        <div className="bg-white p-6 rounded-xl shadow mb-6">
-          <div className="flex flex-col md:flex-row md:items-end gap-4">
-            <div className="flex-1">
-              <label htmlFor="office-search" className="block text-sm font-medium text-gray-700 mb-1">
-                Search by name
-              </label>
-              <div className="relative">
-                <span aria-hidden="true" className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                  🔍
-                </span>
-                <input
-                  id="office-search"
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="e.g., Berlin Mitte"
-                  className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="md:w-56">
-              <label htmlFor="office-city" className="block text-sm font-medium text-gray-700 mb-1">
-                City
-              </label>
-              <select
-                id="office-city"
-                value={cityFilter}
-                onChange={(e) => setCityFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All cities</option>
-                {cityOptions.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="md:w-56">
-              <label htmlFor="office-type" className="block text-sm font-medium text-gray-700 mb-1">
-                Type
-              </label>
-              <select
-                id="office-type"
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All types</option>
-                {typeOptions.map(t => (
-                  <option key={t} value={t}>{TYPE_LABEL[t]}</option>
-                ))}
-              </select>
-            </div>
-
-            {hasActiveFilter && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="text-sm text-gray-600 hover:text-gray-900 underline self-start md:self-end md:pb-2"
-              >
-                Clear filters
-              </button>
-            )}
-          </div>
-
-          <p aria-live="polite" className="text-sm text-gray-500 mt-4">
-            {loading
-              ? 'Loading offices…'
-              : `Showing ${filtered.length} of ${offices.length} office${offices.length !== 1 ? 's' : ''}`}
-          </p>
+        <div className="flex flex-wrap gap-2 mb-6">
+          {CITIES.map((c) => (
+            <button key={c} onClick={() => setCity(c)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                      city === c ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+                    }`}>
+              {c === 'ALL' ? 'All cities' : c.charAt(0).toUpperCase() + c.slice(1)}
+            </button>
+          ))}
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6 text-sm">
-            {error}
-          </div>
-        )}
+        {loading && <p className="text-gray-500">Loading…</p>}
 
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-3">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" />
-            <p className="text-gray-400 text-sm">Loading offices…</p>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow p-14 text-center">
-            <div className="text-6xl mb-4">🔎</div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              {offices.length === 0 ? 'No offices found' : 'No offices match your filters'}
-            </h3>
-            <p className="text-gray-500 mb-8 max-w-sm mx-auto">
-              {offices.length === 0
-                ? 'There are no offices to display right now.'
-                : 'Try adjusting your search, city, or type filter.'}
-            </p>
-            {hasActiveFilter && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition"
-              >
-                Clear filters
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filtered.map((office) => (
-              <div key={office.id} className="bg-white p-6 rounded-xl shadow">
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <h3 className="text-xl font-semibold">{office.name}</h3>
-                  <span className="shrink-0 text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700">
-                    {TYPE_LABEL[office.type]}
-                  </span>
-                </div>
-                <p className="text-gray-600 mb-4">{office.city}</p>
-                <div className="space-y-2 text-sm">
-                  <p><strong>Address:</strong> {office.address}</p>
-                  {office.phone && <p><strong>Phone:</strong> {office.phone}</p>}
-                  {office.email && <p><strong>Email:</strong> {office.email}</p>}
-                  {office.website && (
-                    <a href={office.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                      Visit Website
-                    </a>
-                  )}
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {offices.map((o) => (
+            <div key={o.id} className="bg-white rounded-xl shadow p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">{o.type}</span>
+                {o.cityName && <span className="text-xs text-gray-500">{o.cityName}</span>}
               </div>
-            ))}
-          </div>
-        )}
+              <h3 className="font-semibold text-gray-900">{o.name}</h3>
+              <p className="text-sm text-gray-600 mt-1">{o.address}</p>
+              <div className="flex gap-3 mt-3 text-sm">
+                {o.bookingUrl && (
+                  <a href={o.bookingUrl} target="_blank" rel="noopener noreferrer"
+                     className="text-blue-600 hover:underline">Book →</a>
+                )}
+                {o.phone && <span className="text-gray-500">{o.phone}</span>}
+              </div>
+              {o.languagesSupported.length > 0 && (
+                <p className="text-xs text-gray-400 mt-2">Languages: {o.languagesSupported.join(', ')}</p>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
