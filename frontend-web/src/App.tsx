@@ -8,6 +8,9 @@ import Tasks from './pages/Tasks';
 import TaskDetail from './pages/TaskDetail';
 import Marketplace from './pages/Marketplace';
 import Offices from './pages/Offices';
+import Imprint from './pages/Imprint';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Terms from './pages/Terms';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -30,6 +33,9 @@ function App() {
           <Route path="/tasks/:id" element={<ProtectedRoute><TaskDetail /></ProtectedRoute>} />
           <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
           <Route path="/offices" element={<ProtectedRoute><Offices /></ProtectedRoute>} />
+          <Route path="/imprint" element={<Imprint />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

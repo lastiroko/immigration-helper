@@ -85,6 +85,14 @@ export default function Login() {
             Register
           </Link>
         </p>
+
+        <div className="text-center text-xs text-gray-400 mt-8 space-x-3">
+          <Link to="/imprint" className="hover:text-gray-600">Imprint</Link>
+          <span>·</span>
+          <Link to="/privacy" className="hover:text-gray-600">Privacy</Link>
+          <span>·</span>
+          <Link to="/terms" className="hover:text-gray-600">Terms</Link>
+        </div>
       </div>
     </div>
   );
