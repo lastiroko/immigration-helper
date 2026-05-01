@@ -1,7 +1,9 @@
-# syntax=docker/dockerfile:1.6
-#
 # Multi-stage build for the Helfa backend. Build context is the backend/ folder.
 # On Railway / Fly / Render, set the service Root Directory to "backend".
+#
+# Note: BuildKit cache mounts (--mount=type=cache) are intentionally not used —
+# Railway's classic builder rejects them. Adding them back is fine if you switch
+# to a host that uses BuildKit by default (Fly, GHCR Actions, local docker).
 
 # ── Stage 1: build the JAR ───────────────────────────────────────────────────
 FROM maven:3.9-eclipse-temurin-21 AS build
@@ -9,13 +11,11 @@ WORKDIR /workspace
 
 # Resolve dependencies first so source-only changes don't bust the layer cache.
 COPY pom.xml ./
-RUN --mount=type=cache,target=/root/.m2 \
-    mvn -B -q -DskipTests dependency:go-offline
+RUN mvn -B -q -DskipTests dependency:go-offline
 
 # Compile + package, skipping tests (CI runs them separately).
 COPY src ./src
-RUN --mount=type=cache,target=/root/.m2 \
-    mvn -B -q -DskipTests package && \
+RUN mvn -B -q -DskipTests package && \
     cp target/*.jar /workspace/app.jar
 
 # ── Stage 2: minimal runtime ─────────────────────────────────────────────────
