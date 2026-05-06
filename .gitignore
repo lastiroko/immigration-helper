@@ -38,3 +38,6 @@ graphify-out/
 # Local file-storage uploads (LocalFileStorageService writes here in dev/tests)
 backend/uploads/
 
+# Vercel CLI project-link metadata (machine-specific; never commit)
+.vercel/
+
