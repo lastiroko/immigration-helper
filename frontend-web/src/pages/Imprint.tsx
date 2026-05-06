@@ -38,7 +38,7 @@ export default function Imprint() {
       <p>
         The EU Commission provides an online dispute-resolution platform
         at <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer"
-              className="text-blue-600 hover:underline">ec.europa.eu/consumers/odr/</a>.
+              className="text-helfa-ink font-semibold underline hover:no-underline">ec.europa.eu/consumers/odr/</a>.
         We are not obliged or willing to participate in dispute-resolution
         proceedings before a consumer arbitration board.
       </p>

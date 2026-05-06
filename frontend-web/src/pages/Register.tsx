@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { AuthShell, Field } from './Login';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -27,84 +28,75 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">
-          Create Account
-        </h2>
-        <p className="text-center text-gray-600 mb-8">
-          Start managing your visa journey today
-        </p>
+    <AuthShell
+      eyebrow="Get started"
+      headline={<>BUILD YOUR<br /><span className="text-helfa-lime">HELFA PLAN</span></>}
+      tagline="Six questions, one personalised checklist. Free to start."
+    >
+      {error && (
+        <div className="bg-red-50 text-red-700 p-3 rounded-xl mb-4 text-sm">
+          {error}
+        </div>
+      )}
 
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
-            {error}
-          </div>
-        )}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label="Full name">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="w-full px-4 py-3 rounded-xl border border-helfa-ink/15 bg-white focus:ring-2 focus:ring-helfa-lime focus:border-transparent outline-none"
+            placeholder="Aisha Adekunle"
+          />
+        </Field>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="John Doe"
-            />
-          </div>
+        <Field label="Email">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-4 py-3 rounded-xl border border-helfa-ink/15 bg-white focus:ring-2 focus:ring-helfa-lime focus:border-transparent outline-none"
+            placeholder="your@email.com"
+          />
+        </Field>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="your@email.com"
-            />
-          </div>
+        <Field label="Password">
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+            className="w-full px-4 py-3 rounded-xl border border-helfa-ink/15 bg-white focus:ring-2 focus:ring-helfa-lime focus:border-transparent outline-none"
+            placeholder="••••••••"
+          />
+          <span className="block text-xs text-helfa-slate mt-1">At least 6 characters.</span>
+        </Field>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="••••••••"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              At least 6 characters
-            </p>
-          </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-pill-lime w-full"
+        >
+          {loading ? 'Creating account…' : 'Create account →'}
+        </button>
+      </form>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 transition"
-          >
-            {loading ? 'Creating account...' : 'Register'}
-          </button>
-        </form>
+      <p className="text-center text-sm text-helfa-slate mt-7">
+        Already have one?{' '}
+        <Link to="/login" className="font-semibold text-helfa-ink hover:underline">
+          Sign in
+        </Link>
+      </p>
 
-        <p className="text-center text-gray-600 mt-6">
-          Already have an account?{' '}
-          <Link to="/login" className="text-blue-600 hover:underline font-medium">
-            Login
-          </Link>
-        </p>
-      </div>
-    </div>
+      <p className="text-center text-xs text-helfa-slate/70 mt-6">
+        By creating an account you agree to our{' '}
+        <Link to="/terms" className="underline hover:text-helfa-ink">Terms</Link>{' '}
+        and{' '}
+        <Link to="/privacy" className="underline hover:text-helfa-ink">Privacy Policy</Link>.
+      </p>
+    </AuthShell>
   );
 }

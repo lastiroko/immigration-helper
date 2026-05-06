@@ -7,6 +7,14 @@ import type { TaskDto, UserJourney } from '../types';
 
 interface DocSlot { type: string; satisfied: boolean; }
 
+const STATUS_BADGE: Record<string, string> = {
+  UPCOMING: 'bg-helfa-stone text-helfa-ink',
+  DUE: 'bg-amber-200 text-amber-900',
+  OVERDUE: 'bg-red-100 text-red-700',
+  COMPLETE: 'bg-helfa-lime text-helfa-ink',
+  SKIPPED: 'bg-helfa-stone text-helfa-slate line-through',
+};
+
 export default function TaskDetail() {
   const { id } = useParams<{ id: string }>();
   const [task, setTask] = useState<TaskDto | null>(null);
@@ -79,48 +87,55 @@ export default function TaskDetail() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-helfa-cream">
         <Header onLogout={() => { logout(); navigate('/login'); }} />
-        <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="max-w-3xl mx-auto px-5 py-10">
           <div className="bg-red-50 text-red-700 p-4 rounded-xl">{error}</div>
-          <Link to="/tasks" className="text-blue-600 hover:underline mt-4 inline-block">← back to tasks</Link>
+          <Link to="/tasks" className="text-helfa-ink hover:underline mt-4 inline-block text-sm">← back to tasks</Link>
         </div>
       </div>
     );
   }
-  if (!task) return <p className="p-8 text-gray-500">Loading…</p>;
+  if (!task) return <p className="p-8 text-helfa-slate">Loading…</p>;
 
   const terminal = task.status === 'COMPLETE' || task.status === 'SKIPPED';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-helfa-cream">
       <Header onLogout={() => { logout(); navigate('/login'); }} />
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <Link to="/tasks" className="text-sm text-gray-500 hover:text-gray-900 mb-4 inline-block">← back</Link>
+      <div className="max-w-3xl mx-auto px-5 py-10">
+        <Link to="/tasks" className="text-sm text-helfa-slate hover:text-helfa-ink mb-4 inline-block">← back</Link>
 
-        <div className="bg-white rounded-xl shadow p-6 mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-medium">{task.status}</span>
-            <span className="text-xs text-gray-400">priority {task.priority}</span>
-            {journey && <span className="text-xs text-gray-400">• {journey.type.replace(/_/g, ' ')}</span>}
+        <div className="surface-card p-7 mb-5">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <span className={`badge-pill ${STATUS_BADGE[task.status] ?? 'bg-helfa-stone text-helfa-ink'}`}>
+              {task.status}
+            </span>
+            <span className="text-xs text-helfa-slate">priority {task.priority}</span>
+            {journey && <span className="text-xs text-helfa-slate">• {journey.type.replace(/_/g, ' ')}</span>}
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">{task.title}</h1>
-          {task.description && <p className="text-gray-700 leading-relaxed">{task.description}</p>}
-          <div className="text-sm text-gray-500 mt-4">
+          <h1 className="display-headline text-3xl mb-3">{task.title}</h1>
+          {task.description && <p className="text-helfa-ink/80 leading-relaxed">{task.description}</p>}
+          <div className="text-sm text-helfa-slate mt-5">
             {task.dueAt
-              ? <>Due <strong>{new Date(task.dueAt).toLocaleDateString()}</strong></>
+              ? <>Due <strong className="text-helfa-ink">{new Date(task.dueAt).toLocaleDateString()}</strong></>
               : 'Blocked — waiting for upstream task to complete'}
             {task.postponedUntil && <> • postponed to {new Date(task.postponedUntil).toLocaleDateString()}</>}
           </div>
         </div>
 
         {slots.length > 0 && (
-          <div className="bg-white rounded-xl shadow p-6 mb-6">
-            <h3 className="font-semibold text-gray-900 mb-3">Required documents</h3>
-            <ul className="space-y-1 text-sm">
+          <div className="surface-card p-7 mb-5">
+            <h3 className="font-bold text-helfa-ink mb-4 uppercase tracking-tight">Required documents</h3>
+            <ul className="space-y-2 text-sm">
               {slots.map((s, i) => (
-                <li key={i} className={s.satisfied ? 'text-green-700' : 'text-gray-600'}>
-                  {s.satisfied ? '✓' : '○'} {s.type}
+                <li key={i} className="flex items-center gap-2">
+                  <span className={`h-5 w-5 rounded-full grid place-items-center text-[10px] font-bold ${
+                    s.satisfied ? 'bg-helfa-lime text-helfa-ink' : 'bg-helfa-stone text-helfa-slate'
+                  }`}>
+                    {s.satisfied ? '✓' : '○'}
+                  </span>
+                  <span className={s.satisfied ? 'text-helfa-ink' : 'text-helfa-slate'}>{s.type}</span>
                 </li>
               ))}
             </ul>
@@ -129,16 +144,13 @@ export default function TaskDetail() {
 
         {!terminal && (
           <div className="flex flex-wrap gap-3">
-            <button onClick={complete} disabled={busy}
-                    className="bg-green-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400">
+            <button onClick={complete} disabled={busy} className="btn-pill-lime">
               ✓ Mark complete
             </button>
-            <button onClick={() => postpone(7)} disabled={busy}
-                    className="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg font-medium hover:bg-gray-50 disabled:bg-gray-100">
+            <button onClick={() => postpone(7)} disabled={busy} className="btn-pill-outline">
               Postpone 1 week
             </button>
-            <button onClick={skip} disabled={busy}
-                    className="bg-white border border-gray-300 text-gray-500 px-5 py-2.5 rounded-lg font-medium hover:bg-gray-50 disabled:bg-gray-100">
+            <button onClick={skip} disabled={busy} className="btn-pill-outline !text-helfa-slate">
               Skip
             </button>
           </div>

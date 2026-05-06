@@ -34,45 +34,52 @@ export default function Marketplace() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-helfa-cream">
       <Header onLogout={() => { logout(); navigate('/login'); }} />
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Marketplace</h1>
-        <p className="text-gray-600 mb-6">Vetted partners across the categories Helfa supports. Commission disclosed on every card.</p>
+      <div className="max-w-5xl mx-auto px-5 py-10">
+        <p className="text-xs uppercase tracking-[0.2em] text-helfa-slate">Vetted partners</p>
+        <h1 className="display-headline text-4xl mt-1">MARKETPLACE</h1>
+        <p className="text-helfa-slate mt-3 max-w-2xl">
+          Vetted partners across the categories Helfa supports. Commission disclosed on every card — no hidden incentives.
+        </p>
 
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 my-7">
           {CATEGORIES.map((c) => (
-            <button key={c} onClick={() => setFilter(c)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-                      filter === c ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-                    }`}>
+            <button
+              key={c}
+              onClick={() => setFilter(c)}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition ${
+                filter === c
+                  ? 'bg-helfa-ink text-helfa-lime'
+                  : 'bg-white text-helfa-slate border border-helfa-ink/10 hover:border-helfa-ink'
+              }`}
+            >
               {c}
             </button>
           ))}
         </div>
 
-        {loading && <p className="text-gray-500">Loading…</p>}
+        {loading && <p className="text-helfa-slate">Loading…</p>}
         {!loading && partners.length === 0 && (
-          <div className="bg-white rounded-xl shadow p-8 text-center text-gray-500">
+          <div className="surface-card p-10 text-center text-helfa-slate">
             No partners in this category yet.
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {partners.map((p) => (
-            <div key={p.id} className="bg-white rounded-xl shadow p-5 flex flex-col">
+            <div key={p.id} className="surface-card p-6 flex flex-col">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h3 className="font-semibold text-gray-900">{p.name}</h3>
-                  <span className="text-xs text-gray-500">{p.category}</span>
+                  <h3 className="font-bold text-helfa-ink">{p.name}</h3>
+                  <span className="text-xs uppercase tracking-wider text-helfa-slate">{p.category}</span>
                 </div>
                 {p.rating != null && (
-                  <span className="text-sm text-yellow-600">★ {Number(p.rating).toFixed(1)}</span>
+                  <span className="text-sm text-helfa-ink">★ {Number(p.rating).toFixed(1)}</span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 italic mb-4 leading-snug">{p.commissionDisclosure}</p>
-              <button onClick={() => click(p.slug)}
-                      className="mt-auto bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 text-sm">
+              <p className="text-xs text-helfa-slate italic mt-3 mb-5 leading-snug">{p.commissionDisclosure}</p>
+              <button onClick={() => click(p.slug)} className="btn-pill-dark mt-auto self-start text-sm !py-2.5 !px-5">
                 Visit {p.name} →
               </button>
             </div>

@@ -13,7 +13,7 @@ export default function PrivacyPolicy() {
       <p>
         Controller within the meaning of the GDPR is YOUR_LEGAL_NAME,
         YOUR_STREET_ADDRESS, YOUR_POSTAL_CODE YOUR_CITY, Germany.
-        See the <a href="/imprint" className="text-blue-600 hover:underline">Imprint</a> for full contact details.
+        See the <a href="/imprint" className="text-helfa-ink font-semibold underline hover:no-underline">Imprint</a> for full contact details.
       </p>
 
       <h2 className="text-xl font-semibold mt-6">2. Personal data we process</h2>
@@ -68,7 +68,7 @@ export default function PrivacyPolicy() {
       <h2 className="text-xl font-semibold mt-6">6. Your rights (Art. 15-21 GDPR)</h2>
       <ul className="list-disc pl-6 space-y-1">
         <li>Right of access (Art. 15) — request a JSON export at
-          <code className="bg-gray-100 px-1 rounded text-xs"> POST /v1/privacy/export</code>.</li>
+          <code className="bg-helfa-stone px-1.5 py-0.5 rounded text-xs"> POST /v1/privacy/export</code>.</li>
         <li>Right to rectification (Art. 16) — edit your profile in-app.</li>
         <li>Right to erasure (Art. 17) — DELETE your account in Settings.</li>
         <li>Right to data portability (Art. 20) — same export endpoint.</li>
