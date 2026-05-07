@@ -7,7 +7,16 @@ import type {
   OfficeDto, VaultDocumentListResponse, VaultDocumentDto,
 } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1';
+// VITE_API_URL is the only source of truth in normal use. The fallbacks below
+// only apply when the env var is missing entirely (e.g. preview deploys that
+// weren't given the production env). In that case, default to the deployed
+// Railway backend in production builds, and to localhost in dev so a developer
+// running `npm run dev` without `.env.local` doesn't accidentally hit prod.
+const API_URL =
+  import.meta.env.VITE_API_URL ??
+  (import.meta.env.PROD
+    ? 'https://immigration-helper-production.up.railway.app/api/v1'
+    : 'http://localhost:8080/api/v1');
 
 const api = axios.create({
   baseURL: API_URL,
