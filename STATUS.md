@@ -8,21 +8,22 @@
 
 ## Current focus (read this first)
 
+> *Built so well a stranger on Reddit recommends it without being asked.*
+
 **v1 is one flow: Anmeldung in Köln, in English. Everything else is parked.**
 
 - Authoritative spec: [`docs/specs/anmeldung-koeln-v1-spec.md`](docs/specs/anmeldung-koeln-v1-spec.md)
 - Pivot date: 2026-05-06
 - Surface: standalone page at `/anmeldung-koeln`, no login required for the first half
-- Booking model: assisted (slot-watcher + deep-link), not on-behalf-of
-- Ship gate: a stranger on Reddit recommends it without being asked
+- Booking model: assisted (we walk users through Köln's own system), not on-behalf-of
 
-The previously-built Helfa modules (auth, journeys, tasks, marketplace, offices, vault, billing) **stay deployed** but are not the focus. Do not refactor them. The Köln page shares the deployment but not the data model — one new endpoint (slot watcher cron + email) and one new table (`slot_watchers`).
+The previously-built Helfa modules (auth, journeys, tasks, marketplace, offices, vault, billing) **stay deployed** but are not the focus. Do not refactor them. The Köln page shares the deployment but not the data model — zero new backend endpoints, no new tables, no new migrations. It's a frontend-only build with `localStorage` for in-flight state.
 
 **Pre-pivot work was archived** to branch `archive/pre-koeln-pivot` (commit `5553b03`) — the Helfa-branded redesign across all pages plus the prior STATUS.md. Cherry-pick from there if the broader scope resumes.
 
 ### Immediate next step
 
-Verify the six factual claims the spec depends on (walk-in days, Wohnungsgeberbestätigung PDF URL, booking system URL, anti-bot behavior, Anmeldeformular version, non-EU quirks). If any fact is wrong, amend the spec before writing screens.
+Build Screen 0 (Landing) as a static, mobile-first page — real copy from the spec, no logic, no state, no routing past it. Sets the tone for everything that follows. (Spec verification was completed 2026-05-07; see *Verified facts* in the spec. One outstanding manual check — confirming walk-in is currently active by calling 0221/221-0 — is on the founder, not blocking.)
 
 ---
 
@@ -95,12 +96,19 @@ These were the post-launch hardening items as of 2026-05-01. **All parked for v1
 
 ## Recent commit history
 
+*Auto-pasted from `git log --oneline -10`; not hand-maintained. Refresh when updating STATUS.md. (The commit that updates this section will not appear in it — that's the bootstrap.)*
+
 ```
+a1cc7ac docs: rewrite STATUS.md for Köln pivot
+42bfbcc chore: gitignore .vercel/
+40a1d24 spec v1.1: verification corrections + slot watcher cut
 41930bf Legal pages (Imprint/Privacy/Terms) + mobile app scaffold
 0cbf63e Frontend: rip out CRM screens, build Helfa onboarding/tasks/marketplace
 3818a7f Phase 5 deployment-dependent items: HSTS header + Stripe runbook
 1c07634 Seed marketplace with 10 MVP partners (Fintiba, Feather, Wunderflats, …)
 3c7a755 Drop BuildKit cache mounts from Dockerfile for Railway compatibility
+c4f37c9 Add production Dockerfile + Railway deploy guide
+ca60aaf Helfa migration Phase 5: marketplace, billing, push, GDPR, account lifecycle
 ```
 
 `archive/pre-koeln-pivot` adds one snapshot commit (`5553b03`) on top of `41930bf`.
