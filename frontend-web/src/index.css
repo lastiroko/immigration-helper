@@ -1,3 +1,86 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-helfa-ink: #0A1410;
+  --color-helfa-deep: #15302A;
+  --color-helfa-cream: #F1EFE8;
+  --color-helfa-stone: #EAE8DF;
+  --color-helfa-slate: #5A625E;
+  --color-helfa-lime: #C8FF3D;
+  --color-helfa-limeDim: #B6E931;
+
+  --font-display: "Anton", "Archivo Black", Impact, system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --shadow-card: 0 1px 2px rgba(10, 20, 16, 0.04), 0 8px 24px rgba(10, 20, 16, 0.06);
+  --shadow-cta: 0 2px 4px rgba(10, 20, 16, 0.08), 0 12px 28px rgba(10, 20, 16, 0.10);
+}
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-helfa-ink);
+    background-color: var(--color-helfa-cream);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Break long German compound words (e.g. Wohnungsgeberbescheinigung)
+       so they don't blow out narrow viewports. */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+}
+
+/* Utility shortcuts for the Köln landing page */
+
+.display-headline {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  line-height: 0.92;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.surface-card {
+  border-radius: 1rem;
+  background-color: #fff;
+  box-shadow: var(--shadow-card);
+  border: 1px solid color-mix(in srgb, var(--color-helfa-ink) 6%, transparent);
+}
+
+.btn-pill-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 1.125rem 2rem;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  letter-spacing: -0.005em;
+  background-color: var(--color-helfa-lime);
+  color: var(--color-helfa-ink);
+  box-shadow: var(--shadow-cta);
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              background-color 180ms,
+              box-shadow 180ms,
+              filter 180ms;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+.btn-pill-cta:hover {
+  background-color: var(--color-helfa-limeDim);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(10, 20, 16, 0.10), 0 16px 36px rgba(10, 20, 16, 0.14);
+}
+.btn-pill-cta:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-cta);
+}
+.btn-pill-cta:focus-visible {
+  outline: 2px solid var(--color-helfa-ink);
+  outline-offset: 3px;
+}

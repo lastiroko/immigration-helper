@@ -11,6 +11,7 @@ import Offices from './pages/Offices';
 import Imprint from './pages/Imprint';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
+import AnmeldungKoeln from './pages/AnmeldungKoeln';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -25,6 +26,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          <Route path="/anmeldung-koeln" element={<AnmeldungKoeln />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
