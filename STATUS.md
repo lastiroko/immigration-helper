@@ -2,7 +2,8 @@
 
 > Living snapshot. Update at the end of each work session. Read this file first when onboarding a new Claude session — it tells you where we are *now*. Spec and design docs live in `docs/`; architecture in `ARCHITECTURE.md`.
 
-**Last updated:** 2026-05-07
+**Last updated:** 2026-05-11
+**Status:** Anmeldung Köln spec at v1.2 — ready for implementation.
 
 ---
 
