@@ -38,6 +38,12 @@ CTA: **Start — takes 4 minutes**
        │ No
        ▼
 ┌──────────────────────┐
+│ 1.5 Arriving from    │ ──── "Within DE" ──▶ Same flow + Ummeldung
+│     abroad, or       │                      vocabulary note
+│     moving in-DE?    │
+└──────┬───────────────┘
+       ▼
+┌──────────────────────┐
 │ 2. Do you have a     │ ──── "No" ────▶ Housing partner branch (exit)
 │    residence yet?    │
 └──────┬───────────────┘
@@ -74,9 +80,9 @@ CTA: **Start — takes 4 minutes**
        └───────────────┬───────────────────┘
                        ▼
 ┌────────────────────────────────────────┐
-│ 7. The appointment companion           │
-│    — German phrases, document order,   │
-│    what happens at the desk            │
+│ 7. The appointment companion           │ ──── sent home ──▶ 7b. Three reasons,
+│    — German phrases, document order,   │                    three fixes; Rebook
+│    what happens at the desk            │                    loops to Screen 5
 └──────┬─────────────────────────────────┘
        ▼
 ┌────────────────────────────────────────┐
@@ -132,6 +138,27 @@ Each screen is one decision. No screen has more than one primary CTA.
 **If "No" → continue to Screen 2.**
 
 This is the honest first filter. It costs us a small slice of users (who didn't need us anyway) and earns trust by not pretending the in-person flow is the only path.
+
+---
+
+### Screen 1.5: "Are you new to Germany?"
+
+**Single question, two big buttons:**
+
+- 🌍 **Arriving in Germany for the first time**
+- 🏙️ **Moving within Germany (from another city)**
+
+**If "Arriving from abroad" → continue to Screen 2 (current flow).**
+
+**If "Moving within Germany" → small explainer, then continue to Screen 2:**
+
+> **What you're doing is technically called *Ummeldung*, not Anmeldung.**
+>
+> Good news: the documents, the Kundenzentrum, the form, and the 14-day deadline are all the same. We'll keep calling it Anmeldung for short — the staff will know what you mean, and so will every guide you read.
+>
+> [Got it — continue]
+
+This screen exists purely to set correct user expectations and surface the right vocabulary. The practical steps from here are identical for both paths.
 
 ---
 
@@ -293,6 +320,27 @@ The list of all nine Kundenzentren (Chorweiler, Ehrenfeld, Innenstadt, Kalk, Lin
 
 **Why we don't run our own slot watcher in v1:** the city's booking host disallows automated polling in `robots.txt`. Building a polite watcher anyway is a v2 decision once we know whether v1 has the audience to justify it. See *v2 candidates* at the bottom of this spec.
 
+**Closing the loop after they leave the app**
+
+Köln's booking happens on stadt-koeln.de in a new tab; many users will book successfully and never come back. Two cheap things reduce that drop-off:
+
+**A. Confirmation-email recognition card** — small card shown right under the booking buttons:
+
+> **When you've booked, look for this email:**
+> - **Subject:** *Terminbestätigung*
+> - **From:** an address ending in `stadt-koeln.de`
+>
+> That's your trigger to come back here. We'll help you prepare for the day.
+
+**B. Forward your confirmation** — input field below the recognition card:
+
+> **Paste the email body here and we'll save your appointment.**
+> [text area] [Save my appointment]
+>
+> Client-side parser pulls the date, time, and Kundenzentrum out of the pasted text and writes them to `localStorage`. No backend, no upload.
+>
+> If parsing fails, fall back to a manual form: date picker + time picker + Kundenzentrum dropdown (the same nine entries used on Screen 6A).
+
 → Screen 7 once they've booked.
 
 ---
@@ -322,6 +370,24 @@ Tap to enlarge — full-screen big text mode. The user can hold their phone up t
 - They might ask about religion (church tax) — you can decline by saying *konfessionslos*
 - They'll print your Meldebescheinigung and you'll walk out with it
 - You'll receive your Steuer-ID by post in 2–3 weeks
+
+---
+
+### Screen 7b: "If they sent you home"
+
+**Shown when:** User comes back from a failed appointment and indicates the registration didn't go through.
+
+**Purpose:** A single screen for the three rejection reasons that actually happen, with one fix each. We don't try to enumerate every possible refusal — three covers the real cases.
+
+| Reason they sent you home | Fix |
+|---|---|
+| **Wohnungsgeberbescheinigung not signed, or in the wrong format** | Use the German message template on Screen 4 to ask your landlord to re-issue. The form must be the official Köln template, signed and dated within 14 days of your move-in. |
+| **Missing visa pages or eAT card (non-EU only)** | Bring your passport with *every* stamp and sticker page, plus the physical eAT card if you have one. A photo of the card does not count — they need to see the chip. |
+| **Address mismatch — form says X, Wohnungsgeber says Y** | Ask your landlord to re-issue the Wohnungsgeberbescheinigung with the exact address as it appears on your lease. Even a missing apartment number is enough to get sent home. |
+
+**CTA:** **Rebook** → loops to Screen 5 (pick walk-in or appointment again).
+
+This isn't a long support page. Three reasons, three fixes, one button. Anyone hitting a fourth reason should escalate, not read more spec.
 
 ---
 
@@ -439,4 +505,4 @@ That's still a better product than what exists today, and it's two weekends of w
 
 ---
 
-*End of spec. Last revision: 2026-05-07 — v1.1 (verification corrections + slot watcher cut).*
+*End of spec. Last revision: 2026-05-11 — v1.2 (Screen 6B confirmation-email closure, Screen 7b rejection branch, Screen 1.5 origin fork).*
