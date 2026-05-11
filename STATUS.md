@@ -3,7 +3,7 @@
 > Living snapshot. Update at the end of each work session. Read this file first when onboarding a new Claude session — it tells you where we are *now*. Spec and design docs live in `docs/`; architecture in `ARCHITECTURE.md`.
 
 **Last updated:** 2026-05-11
-**Status:** Anmeldung Köln spec at v1.2 — ready for implementation.
+**Status:** Anmeldung Köln v1 **shipped** — spec at v1.3, all 12 screens live at `/anmeldung-koeln` with form-fill of the official Köln Anmeldeformular.
 
 ---
 
@@ -22,9 +22,32 @@ The previously-built Helfa modules (auth, journeys, tasks, marketplace, offices,
 
 **Pre-pivot work was archived** to branch `archive/pre-koeln-pivot` (commit `5553b03`) — the Helfa-branded redesign across all pages plus the prior STATUS.md. Cherry-pick from there if the broader scope resumes.
 
+### What shipped (2026-05-11, v1.3)
+
+All 12 screens implemented at `/anmeldung-koeln` (public route, no auth, all state in `localStorage` under `helfa.anmeldung-koeln.state`):
+
+| Screen | Function |
+|---|---|
+| 0 | Landing — Anton hero + chip facts + dark-green CTA |
+| 1 | eID fork (with gov.de exit branch) |
+| 1.5 | Origin fork (Anmeldung vs Ummeldung vocabulary) |
+| 2 | Residence question (with housing off-ramp branch) |
+| 3 | Move-in date (3 conditional copies for on-time / future / overdue) |
+| 4 | Document checklist with gated CTA + family toggle + **Anmeldeformular form-fill** |
+| 5 | Pick path (walk-in vs booked) |
+| 6A | Walk-in plan (Kundenzentrum picker, day-aware copy) |
+| 6B | Booked plan (paste-to-parse confirmation + manual fallback) |
+| 7 | Companion (full-screen phrase overlay via portal) |
+| 7b | Rejection branch (3 reasons, 3 fixes, rebook loop) |
+| 8 | Timeline + .ics download |
+
+The Anmeldeformular form-fill on Screen 4 fetches the live PDF from `formular-server.de` and overlays text/dropdowns/radios via `pdf-lib`. Covers all 73 AcroForm fields we have user data for, including a Person 2 section for spouse/family registration.
+
+State machine is data-derived (no `state.screen`) — single source of truth. ScreenRouter `useMemo`s `deriveScreen(state)` on each render.
+
 ### Immediate next step
 
-Build Screen 0 (Landing) as a static, mobile-first page — real copy from the spec, no logic, no state, no routing past it. Sets the tone for everything that follows. (Spec verification was completed 2026-05-07; see *Verified facts* in the spec. One outstanding manual check — confirming walk-in is currently active by calling 0221/221-0 — is on the founder, not blocking.)
+Real-user testing per spec criterion #1 ("a friend who has never been to Germany can do Anmeldung using only the page"). Beyond that, the most natural follow-on flow is the **residence permit at the Ausländerbehörde** for non-EU users — already a parking-lot link on Screen 8. (One outstanding manual check from v1.0 — confirming walk-in is currently active by calling 0221/221-0 — is still on the founder, not blocking.)
 
 ---
 
@@ -100,16 +123,16 @@ These were the post-launch hardening items as of 2026-05-01. **All parked for v1
 *Auto-pasted from `git log --oneline -10`; not hand-maintained. Refresh when updating STATUS.md. (The commit that updates this section will not appear in it — that's the bootstrap.)*
 
 ```
-a1cc7ac docs: rewrite STATUS.md for Köln pivot
-42bfbcc chore: gitignore .vercel/
-40a1d24 spec v1.1: verification corrections + slot watcher cut
-41930bf Legal pages (Imprint/Privacy/Terms) + mobile app scaffold
-0cbf63e Frontend: rip out CRM screens, build Helfa onboarding/tasks/marketplace
-3818a7f Phase 5 deployment-dependent items: HSTS header + Stripe runbook
-1c07634 Seed marketplace with 10 MVP partners (Fintiba, Feather, Wunderflats, …)
-3c7a755 Drop BuildKit cache mounts from Dockerfile for Railway compatibility
-c4f37c9 Add production Dockerfile + Railway deploy guide
-ca60aaf Helfa migration Phase 5: marketplace, billing, push, GDPR, account lifecycle
+85f239f feat(form-fill): split firstName into Rufname + weitere Vornamen
+1307faf fix(anmeldung-koeln): always show all previous-address fields
+2b7f1b9 feat(anmeldung-koeln): build /anmeldung-koeln flow per spec v1.3
+3250ba6 chore: add Bangladesh Freelancer ID design references
+ac85d2c docs(spec): bump Anmeldung Köln spec to v1.3
+68ac838 docs(status): surface Anmeldung Köln spec v1.2 readiness
+b8dee44 docs(spec): bump Anmeldung Köln spec to v1.2
+db497bf fix(frontend): production-aware API URL fallback so preview deploys work
+ef0da6d fix(backend): allow Vercel + PATCH in CORS so production login/register works
+05966f7 fix: repo-root vercel.json with explicit cd into frontend-web
 ```
 
 `archive/pre-koeln-pivot` adds one snapshot commit (`5553b03`) on top of `41930bf`.
