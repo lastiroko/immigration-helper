@@ -1,0 +1,18 @@
+# Helfa — public crawl policy
+# /anmeldung-koeln is the marquee public page. Other routes (login,
+# dashboard, billing) are pre-pivot infrastructure that's deployed but
+# not the focus.
+
+User-agent: *
+Allow: /anmeldung-koeln
+Allow: /imprint
+Allow: /privacy
+Allow: /terms
+Disallow: /login
+Disallow: /register
+Disallow: /onboarding
+Disallow: /tasks
+Disallow: /marketplace
+Disallow: /offices
+
+Sitemap: https://immigration-helper-taupe.vercel.app/sitemap.xml
