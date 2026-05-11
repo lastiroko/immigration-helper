@@ -1,4 +1,8 @@
-import { PDFDocument } from 'pdf-lib';
+// pdf-lib (~150 KB gzipped) is dynamically imported inside
+// fillAnmeldeformular so it doesn't sit in the initial JS bundle. Only
+// users who click "Generate my filled form" pay for it. The type import
+// below is erased at compile time.
+import type { PDFDocument } from 'pdf-lib';
 import type {
   PersonalDetails,
   SecondPerson,
@@ -104,7 +108,12 @@ export async function fillAnmeldeformular(
   details: PersonalDetails,
   moveInDate: string | null,
 ): Promise<string> {
-  const res = await fetch(PDF_URL);
+  // Dynamic import — Vite splits pdf-lib into its own chunk, fetched on
+  // first call. Parallel with the PDF download below to overlap latency.
+  const [{ PDFDocument }, res] = await Promise.all([
+    import('pdf-lib'),
+    fetch(PDF_URL),
+  ]);
   if (!res.ok) {
     throw new Error(`fetch-failed-${res.status}`);
   }
