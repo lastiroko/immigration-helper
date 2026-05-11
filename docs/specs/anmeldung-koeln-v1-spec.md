@@ -214,7 +214,7 @@ The checklist — each item is a tappable card that expands to show details:
 | 1 | Your passport or national ID | Reisepass / Personalausweis | You already have it |
 | 2 | Landlord's confirmation | **Wohnungsgeberbescheinigung** | Your landlord must sign — see below |
 | 3 | Lease contract (recommended, not strictly required) | Mietvertrag | Your landlord |
-| 4 | Filled-in registration form | Anmeldeformular | We give you a cheat-sheet — see below |
+| 4 | Filled-in registration form | Anmeldeformular | We fill it for you — see below |
 | 5 | **Non-EU only:** visa sticker or eAT residence permit card | Visum / Aufenthaltstitel (eAT) | Bring it if you have it |
 | 6 | Marriage / birth certificates if registering family | Heirats- / Geburtsurkunde | Bring originals + certified German translation |
 | 7 | Tax ID, *if you already have one* (most don't on first move) | Steuer-ID | Skip if first time in Germany |
@@ -235,9 +235,9 @@ The checklist — each item is a tappable card that expands to show details:
 
 **The Anmeldeformular card expands to:**
 
-> **We give you a cheat-sheet. You fill the official form.**
+> **We fill the official form for you. You print it.**
 >
-> Köln's official Anmeldeformular lives on the city's form server and changes from time to time. We don't host a copy — that creates drift risk, and you'd get rejected if our copy fell behind. Instead, we generate a **printable cheat-sheet** that tells you exactly what to write in each field of the official form. We need a few details:
+> Köln's official Anmeldeformular lives on the city's form server (`formular-server.de`), which serves it with `Access-Control-Allow-Origin: *`. The browser fetches the **live** PDF on every generate — never a bundled snapshot, no drift risk. We overlay your details onto the real PDF and hand it back ready to print and sign. We need a few details:
 > - Full legal name (as on passport)
 > - Date and place of birth
 > - Nationality
@@ -246,9 +246,9 @@ The checklist — each item is a tappable card that expands to show details:
 > - Previous address
 > - Köln address
 >
-> [Get my cheat-sheet] [Open the official form (formular-server.de)]
+> [Generate my form (PDF)] [Open the blank form (formular-server.de)]
 >
-> *Print the cheat-sheet, keep it next to the form, copy it field-by-field. Same outcome, zero risk of an outdated copy.*
+> *Always the current version. If Köln tweaks the form, your next generate uses the new layout automatically.*
 
 **The greyed button at the bottom:**
 
@@ -438,7 +438,7 @@ Whenever              Open a German bank account (you needed Anmeldung for this)
 - ❌ The full "all 5 cities" platform
 - ❌ Other topics (police, tax filing, hospital) — they're parking-lot pages with email capture
 - ❌ Marketplace integration (the housing exit links to external partners only — no embedded marketplace UI)
-- ❌ Document storage / vault — we generate the cheat-sheet for the Anmeldeformular and the user fills the official form themselves
+- ❌ Document storage / vault — we generate the filled Anmeldeformular on demand from the live PDF; the user prints it
 - ❌ **Our own slot watcher** — deferred to v2; we link to Terminator if users want automation
 - ❌ Stripe / paid tier — v1 is free
 - ❌ Mobile app theme parity — web only
@@ -457,7 +457,7 @@ These are the facts the spec depends on. Verified against stadt-koeln.de and the
 2. **Wohnungsgeberbescheinigung** is the official Köln term (the spec previously used "Wohnungsgeberbestätigung" — corrected throughout). Form ID `02-F17_WohnGeberBest` on Köln's form server. Landlord deadline: 14 days from move-in. Refusal is a violation, with penalties up to €1,000 for the landlord.
 3. **Köln booking system URL** — `https://termine.stadt-koeln.de/m/kundenzentren/extern/calendar/?uid=b5a5a394-ec33-4130-9af3-490f99517071` (per Köln's article 06415).
 4. **Anti-bot on the booking host** — `robots.txt` says `Disallow: /` for all user-agents; ASP.NET session + `__RequestVerificationToken` on every page. Hence: no homemade slot watcher in v1.
-5. **Anmeldeformular** is form ID `34-F27_Anmeldung` on Köln's form server; interactive form, not a flat PDF. v1 generates a cheat-sheet, user fills the official form.
+5. **Anmeldeformular** is form ID `34-F27_Anmeldung` on Köln's form server; interactive form, not a flat PDF. v1 fetches the live PDF and overlays the user's details with `pdf-lib` in the browser (the form server sends `Access-Control-Allow-Origin: *`).
 6. **Non-EU specifics** — no special Anmeldung form, but bring visa sticker or eAT card. *"Bei Zuzug aus dem Ausland müssen Sie immer selbst vorsprechen"* — first-time registration from abroad must be in person, no Vollmacht.
 
 **One outstanding check (founder is doing it manually):** confirm walk-in is currently active by calling 0221/221-0. If the city has temporarily suspended walk-in, Screen 5 needs a current-status banner; build proceeds with walk-in as the default path until proven otherwise.
@@ -466,7 +466,7 @@ These are the facts the spec depends on. Verified against stadt-koeln.de and the
 
 ## Engineering note (small)
 
-This is a single React route with maybe 10 components and **zero new backend endpoints**. No JPA entities. No new migrations. Use `localStorage` for in-flight state. The cheat-sheet generator is a client-side PDF/HTML render. The .ics file (Screen 8) is also client-side. **Days, not weeks, to build.**
+This is a single React route with maybe 10 components and **zero new backend endpoints**. No JPA entities. No new migrations. Use `localStorage` for in-flight state. The form-fill on Screen 4 uses **pdf-lib** in the browser to overlay text onto the live official PDF (fetched directly — `formular-server.de` allows cross-origin fetches, no proxy needed). The .ics file (Screen 8) is also client-side. **Days, not weeks, to build.**
 
 ---
 
@@ -488,7 +488,7 @@ These earned a v1 spec slot at one point and got cut for scope or risk. If v1 ha
 
 - **Our own slot watcher.** Cut from v1 because the booking host's `robots.txt` disallows all automated polling. Re-evaluate by either: (a) reaching out to the city for an explicit data-sharing arrangement, (b) integrating Terminator's data if they expose a feed, or (c) building a polite watcher with an identifiable User-Agent and accepting the city may block us. Original engineering note: a templated email + scheduled cron polling at a respectful interval (≥10 min) plus a `slot_watchers` table and one backend endpoint.
 - **Live wait-time data per Kundenzentrum.** Köln's wait-time page is a static daily snapshot; v2 could scrape or estimate per-center load.
-- **Document vault** for the user's filled Anmeldeformular cheat-sheet + Wohnungsgeberbescheinigung scan.
+- **Document vault** for the user's filled Anmeldeformular + Wohnungsgeberbescheinigung scan.
 - **The next bureaucracy step** for non-EU users: residence permit at the Ausländerbehörde (Aufenthaltserlaubnis zu Studienzwecken / zur Erwerbstätigkeit). Currently a parking-lot link in Screen 8.
 - **Other cities** — Berlin, Munich, Hamburg, Frankfurt. Each has its own quirks; treat as separate flows, not a templated multi-city platform.
 
@@ -505,4 +505,4 @@ That's still a better product than what exists today, and it's two weekends of w
 
 ---
 
-*End of spec. Last revision: 2026-05-11 — v1.2 (Screen 6B confirmation-email closure, Screen 7b rejection branch, Screen 1.5 origin fork).*
+*End of spec. Last revision: 2026-05-11 — v1.3 (Anmeldeformular: form-fill the live official PDF instead of generating a cheat-sheet).*
