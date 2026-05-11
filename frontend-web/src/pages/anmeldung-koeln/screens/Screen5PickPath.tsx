@@ -1,6 +1,11 @@
 import type { FlowApi } from '../types';
 import { FlowShell } from '../components/FlowShell';
 
+// Manual override per spec — flip to false (and update the date) if Köln
+// suspends walk-in days. Verified active by calling 0221/221-0.
+const WALK_IN_AVAILABLE = true;
+const WALK_IN_LAST_VERIFIED = '2026-05-11';
+
 export function Screen5PickPath({ flow }: { flow: FlowApi }) {
   return (
     <FlowShell
@@ -21,11 +26,21 @@ export function Screen5PickPath({ flow }: { flow: FlowApi }) {
         </p>
       </div>
 
+      {!WALK_IN_AVAILABLE && (
+        <div className="mt-6 rounded-2xl border border-yellow-300 bg-yellow-50 px-5 py-3 text-sm leading-relaxed text-helfa-ink">
+          <strong>Heads-up:</strong> Walk-in days are temporarily suspended at
+          Köln Kundenzentren. Use the booking calendar instead. (Last
+          verified: {WALK_IN_LAST_VERIFIED} via 0221/221-0.)
+        </div>
+      )}
+
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         <PathCard
           eyebrow="Today or tomorrow morning"
           title="Walk-in"
-          tagline="No appointment needed"
+          tagline={
+            WALK_IN_AVAILABLE ? 'No appointment needed' : 'Currently suspended'
+          }
           bullets={[
             <>
               <strong>Mon</strong> 7:30–15:00 (full day) ·{' '}
@@ -35,6 +50,7 @@ export function Screen5PickPath({ flow }: { flow: FlowApi }) {
             <>Best for anyone whose schedule allows a morning off.</>,
           ]}
           onClick={() => flow.update({ appointmentPath: 'walkin' })}
+          disabled={!WALK_IN_AVAILABLE}
         />
         <PathCard
           eyebrow="Tue, Thu, or Fri"
@@ -63,18 +79,23 @@ function PathCard({
   tagline,
   bullets,
   onClick,
+  disabled,
 }: {
   eyebrow: string;
   title: string;
   tagline: string;
   bullets: React.ReactNode[];
   onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
-      onClick={onClick}
-      className="choice-card flex-col items-stretch text-left"
+      onClick={disabled ? undefined : onClick}
+      aria-disabled={disabled}
+      className={`choice-card flex-col items-stretch text-left ${
+        disabled ? 'cursor-not-allowed opacity-50' : ''
+      }`}
     >
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-helfa-slate">
         {eyebrow}
@@ -92,7 +113,7 @@ function PathCard({
       </ul>
 
       <p className="mt-5 text-sm font-semibold text-helfa-ink">
-        Choose this path →
+        {disabled ? 'Not available' : 'Choose this path →'}
       </p>
     </button>
   );
