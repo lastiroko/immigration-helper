@@ -6,6 +6,32 @@ A platform helping international residents navigate German bureaucracy.
 
 > **Pivot in flight (April 2026 → ).** This codebase is being refactored from a visa-application CRM (`VisaApplication` / status workflow / admin approval) into **Helfa**, a personalised guidance app that sequences German bureaucracy tasks for international residents. The plan is documented in `docs/Helfa_MigrationPlan_v1.docx` and the seven companion design docs in `docs/`. The migration is refactor-in-place over five phases, gated behind the `features.guidance.enabled` flag (default `false`); the legacy CRM domain stays live until Phase 4 cutover. Tag `pre-migration-baseline` marks the last commit before any migration code landed.
 
+> **Köln narrowing (May 2026 → ).** On top of the pivot, scope was narrowed further to a single sub-product: **Anmeldung in Köln, in English, for free.** The full multi-city / multi-topic vision is paused. See `STATUS.md` for current state and `docs/specs/anmeldung-koeln-v1-spec.md` (v1.3, locked, shipped) for the authoritative spec.
+
+## Sub-products
+
+The repo houses one shipped sub-product and one in spec-draft:
+
+### `/anmeldung-koeln` — shipped (May 2026)
+
+Standalone 12-screen flow at `https://immigration-helper-taupe.vercel.app/anmeldung-koeln` that walks a newcomer through Köln's address registration. Public route, no login, all state in `localStorage` under `helfa.anmeldung-koeln.state` (schemaVersion: 1). Zero new backend endpoints, zero migrations.
+
+The marquee feature is on Screen 4 — the Anmeldeformular card fills Köln's **live official PDF** via `pdf-lib` in the browser. The form server (`formular-server.de`) sends `Access-Control-Allow-Origin: *`, so the browser fetches the current PDF on every Generate — no bundled snapshot, no drift risk. Covers Person 1 + ID document + addresses (with within-Germany vs from-abroad adaptations), landlord, residence-type radios, marriage info (if married), and Person 2 (if registering family).
+
+State machine is data-derived (no `state.screen`) — single source of truth, useMemo'd on every render. See `frontend-web/src/pages/anmeldung-koeln/state.ts:deriveScreen()`.
+
+Code lives at `frontend-web/src/pages/anmeldung-koeln/`. Tests at the same path (`*.test.ts`). 45 unit tests cover the pure functions (parser, state machine, ICS builder, code mappings). Run `npm test` in `frontend-web/`.
+
+### `/auslaenderbehoerde-koeln` — spec drafted (v0.2)
+
+The natural follow-on for non-EU users after Anmeldung: residence permit at the Ausländerbehörde. Spec at `docs/specs/auslaenderbehoerde-koeln-v1-spec.md`. v1 covers the 80% case (student permit + skilled worker permit / Blue Card). Form-fill pattern reuses pdf-lib + the verified Köln form ID `33-F07_ErstAntBefAuf`. Worker-permit specifics + fees + Fiktionsbescheinigung policy still need verification before v1.0 lock.
+
+### Pre-pivot (deployed, not the focus)
+
+The original CRM modules (auth, journeys, tasks, marketplace, offices, vault, billing) stay deployed at `/login`, `/dashboard`, etc. but are not extended or refactored as part of v1. Treat them as the chassis the Köln page sits on top of. Robots.txt disallows them so search engines don't index broken or gated routes.
+
+---
+
 ## What it does
 
 Immigration Helper turns the multi-step process of applying for a German residence permit into something a student can actually track. Users register, choose a visa type (Student, Work, EU Blue Card, or Family Reunion), and create an application that progresses through a documented status lifecycle (`DRAFT → SUBMITTED → APPROVED | REJECTED`). Every status change is recorded in an append-only audit log so the user can see exactly when and why their application moved.
