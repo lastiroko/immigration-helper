@@ -5,6 +5,7 @@
 
 User-agent: *
 Allow: /anmeldung-koeln
+Allow: /auslaenderbehoerde-koeln
 Allow: /imprint
 Allow: /privacy
 Allow: /terms

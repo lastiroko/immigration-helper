@@ -12,6 +12,7 @@ import Imprint from './pages/Imprint';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
 import AnmeldungKoeln from './pages/AnmeldungKoeln';
+import AuslaenderbehoerdeKoeln from './pages/AuslaenderbehoerdeKoeln';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -27,6 +28,7 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/anmeldung-koeln" element={<AnmeldungKoeln />} />
+          <Route path="/auslaenderbehoerde-koeln" element={<AuslaenderbehoerdeKoeln />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
