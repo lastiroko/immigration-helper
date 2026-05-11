@@ -62,14 +62,16 @@ const RESIDENCE_OPTION: Record<ResidenceType, string> = {
   '': '',
 };
 
-function toGermanDate(iso: string): string {
+// Exported for unit testing.
+export function toGermanDate(iso: string): string {
   if (!iso) return '';
   const [y, m, d] = iso.split('-');
   if (!y || !m || !d) return iso;
   return `${d}.${m}.${y}`;
 }
 
-function religionValue(
+// Exported for unit testing — also used internally by fillAnmeldeformular.
+export function religionValue(
   religion: Religion,
   otherText: string,
 ): string {
@@ -88,7 +90,7 @@ function religionValue(
  *   "John Michael"       → { ruf: "John",  weitere: "Michael" }
  *   "Anna-Maria Theresa" → { ruf: "Anna-Maria", weitere: "Theresa" }
  */
-function splitFirstNames(input: string): { ruf: string; weitere: string } {
+export function splitFirstNames(input: string): { ruf: string; weitere: string } {
   const trimmed = input.trim();
   if (!trimmed) return { ruf: '', weitere: '' };
   const idx = trimmed.indexOf(' ');
