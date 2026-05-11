@@ -1,6 +1,6 @@
 # Helfa — Ausländerbehörde Köln (residence permit) v1
 
-**Status:** Draft v0.1 — design only, no code yet. Founder-verification needed on every fact below.
+**Status:** Draft v0.2 — most facts verified against stadt-koeln.de + th-koeln.de (2026-05-11 pass). Worker-permit specifics + fees + Fiktionsbescheinigung policy still need verification before v1.0 lock.
 
 **One flow. One city. The natural follow-on for non-EU users who finished Anmeldung Köln.**
 
@@ -95,10 +95,10 @@ The 80/20 cut keeps v1 honest. Anyone outside the two paths gets a clear "this v
 └──────┬───────────────┘
        ▼
 ┌──────────────────────┐
-│ 6. Book your         │
-│    appointment       │
-│    (link out to Köln │
-│    booking calendar) │
+│ 6. Book your         │ ◀──── Köln has 9 Bezirksausländerämter (one per
+│    appointment at    │     district). User must apply to the office
+│    YOUR district's   │     covering THEIR Köln postal code — wrong
+│    Bezirksamt        │     office = appointment refused.
 └──────┬───────────────┘
        ▼
 ┌──────────────────────┐
@@ -162,38 +162,59 @@ Pre-fill from `helfa.anmeldung-koeln.state.moveInDate` if present (typical visa 
 
 Adapts to purpose from Screen 2.
 
-**Both purposes need:**
+**Both purposes need (verified against stadt-koeln.de + th-koeln.de):**
 | # | Item | German name |
 |---|---|---|
-| 1 | Passport (with valid visa or entry stamp) | Reisepass |
-| 2 | Biometric photo, max 6 months old | Biometrisches Passfoto |
+| 1 | Passport with valid visa or entry stamp + copies of all printed pages | Reisepass |
+| 2 | Biometric photo, **35×45 mm, max 3 months old** | Biometrisches Passfoto |
 | 3 | Meldebescheinigung from Anmeldung | Meldebescheinigung |
-| 4 | Proof of health insurance (Krankenkasse confirmation) | Krankenversicherungsnachweis |
-| 5 | Proof of address — same Wohnungsgeberbescheinigung as Anmeldung | Wohnungsgeberbescheinigung |
-| 6 | Application form (Antrag auf Erteilung eines Aufenthaltstitels) | Antragsformular |
+| 4 | Proof of health insurance | Krankenversicherungsnachweis |
+| 5 | Rental contract (copy) — proof of address | Mietvertrag |
+| 6 | Filled application form (form ID **33-F07_ErstAntBefAuf**) | Erstantrag auf Erteilung eines befristeten Aufenthaltstitels |
 
 **Student adds:**
-| 7 | Enrollment confirmation (Immatrikulationsbescheinigung) | Immatrikulationsbescheinigung |
-| 8 | Proof of financial means: blocked account ≥ €11,904 (2026 rate) OR scholarship OR parental Verpflichtungserklärung | Finanzierungsnachweis |
+| 7 | Enrollment confirmation | Immatrikulationsbescheinigung |
+| 8 | Proof of financial means: **Sperrkonto ≥ €11,904 / year (€992/month, 08/2025 rate)** OR scholarship OR Verpflichtungserklärung | Finanzierungsnachweis |
 
-**Worker adds:**
+**For renewals from 4th semester onward, additionally:**
+| 9 | Progress certificate showing academic achievements + expected completion date | Studienverlaufsbescheinigung |
+
+**Worker adds (still TODO — needs verification before v1.0):**
 | 7 | Signed employment contract OR job offer letter | Arbeitsvertrag |
 | 8 | Filled "Erklärung zum Beschäftigungsverhältnis" form (employer fills this) | Erklärung zum Beschäftigungsverhältnis |
-| 9 | Highest education certificate (Bachelor's, Master's, etc.) — recognized in ANABIN if foreign | Bildungsabschluss |
-| 10 | If Blue Card: salary ≥ €45,300 (2026 rate, regulated professions €56,400) | Gehaltsnachweis |
+| 9 | Highest education certificate — recognized in ANABIN if foreign | Bildungsabschluss |
+| 10 | If Blue Card: salary above the annual threshold (TODO: 2026 rate) | Gehaltsnachweis |
 
 Same gating pattern as Anmeldung Screen 4: greyed CTA, toast on disabled tap.
 
 ### Screen 6: Book your appointment
 
-> **Köln runs the calendar. We point you at it.**
+> **Köln has 9 Bezirksausländerämter. You go to the one that covers YOUR district.**
 
-Köln's appointment system: `https://termine.stadt-koeln.de/m/auslaenderamt/extern/calendar/` *(verify exact URL — may differ from Anmeldung calendar)*.
+Unlike Anmeldung — where any of the 9 Kundenzentren accepts you — the Ausländeramt is **postal-code-routed**. Your application goes to the Bezirksausländeramt that covers your Köln address. The wrong office will turn you away.
 
-Filter by appointment type — pick **"Aufenthaltstitel — Erstantrag"**.
+We need to:
+1. Take the user's Köln postal code (already in `helfa.anmeldung-koeln.state.personalDetails.koelnPostalCode`)
+2. Map it to the correct Bezirksausländeramt
+3. Surface the booking link for THAT office only
 
-Same honest reality:
-- Slots are scarce
+Köln's appointment overview: [https://www.stadt-koeln.de/artikel/06415/index.html#ziel_0_72](https://www.stadt-koeln.de/artikel/06415/index.html#ziel_0_72)
+
+The 9 Bezirksausländerämter map to Köln's 9 city districts (Stadtbezirke):
+1. Innenstadt
+2. Rodenkirchen
+3. Lindenthal
+4. Ehrenfeld
+5. Nippes
+6. Chorweiler
+7. Porz
+8. Kalk
+9. Mülheim
+
+(Same district names as the Kundenzentren from Anmeldung — likely same buildings, separate departments.)
+
+Same honest reality as Anmeldung's booking screen:
+- Slots are scarce in Köln
 - Book the moment you have a slot, not when you have a deadline
 - Same paste-to-parse confirmation card as Anmeldung Screen 6B
 
@@ -290,20 +311,33 @@ This works because both flows live on the same origin (`immigration-helper-taupe
 
 ---
 
-## Verified facts (TODO — every line below needs founder verification before v0.2)
+## Verified facts (as of 2026-05-11 — sources cited)
 
-These are best-effort guesses based on general knowledge, not confirmed.
+### ✅ Verified
 
-1. **Booking URL** — TODO. Suspected: `https://termine.stadt-koeln.de/m/auslaenderamt/extern/calendar/` but the appointment-type slug may differ.
-2. **Address of Köln Ausländerbehörde** — TODO. Suspected: Kalker Hauptstr. 247–273, 51103 Köln (shared building with Kundenzentrum Kalk, but separate department).
-3. **Fees** — TODO. Suspected: €100 student first-issue, €110 worker first-issue, but 2026 rates may have changed.
-4. **Blocked-account minimum (Sperrkonto)** — TODO. €11,904 in 2024, increases ~5% annually. Confirm 2026 rate via DAAD or auswaertiges-amt.de.
-5. **Blue Card salary threshold** — TODO. €45,300 standard / €56,400 regulated (Mangelberufe) for 2024 per BAMF. Confirm 2026 rate.
-6. **Antragsformular URL** — TODO. May be on stadt-koeln.de or formular-server.de.
-7. **eAT card delivery time** — TODO. 4–6 weeks is folklore; check current Köln backlog.
-8. **Whether Fiktionsbescheinigung is automatic on appointment day** — TODO.
+1. **Köln has 9 Bezirksausländerämter, not one central office.** Postal-code-routed: your application goes to the office covering your Köln district. (Source: stadt-koeln.de/leben-in-koeln/soziales/auslaenderamt/)
+2. **First-issue residence permit form ID:** `33-F07_ErstAntBefAuf` — *Erstantrag auf Erteilung eines befristeten Aufenthaltstitels*. (Source: stadt-koeln.de/service/produkte/00973/)
+3. **Form URL (HTML wrapper):** `https://formular-server.de/Koeln_FS/findform?shortname=33-F07_ErstAntBefAuf&formtecid=3&areashortname=send_html`
+4. **Underlying PDF (CORS-open, AcroForm-fillable):** `https://formular-server.de/Koeln_FS/getform/33-F07_ErstAntBefAuf_send_html_HTML/011-001/33-F07_ErstantragErteilung_befristetenAufenthaltstitels-V10_Vorl-1.12.pdf` — confirmed by HEAD request 2026-05-11. Same form-fill pattern as the Anmeldeformular works.
+5. **Sperrkonto minimum for students:** €11,904 / year (€992 / month) as of 08/2025. (Source: th-koeln.de + stadt-koeln.de)
+6. **Biometric photo spec:** 35 × 45 mm, max 3 months old. (Source: th-koeln.de)
+7. **Two student visa entry types:** *Visum zu Studienzwecken* (already enrolled) vs *Visum zur Studienvorbereitung* (applying to study). Both need a residence permit after Anmeldung. (Source: th-koeln.de)
+8. **Renewal lead time:** Apply ~3 months before current permit expires. From 4th semester onward, bring a progress certificate. (Source: th-koeln.de)
+9. **Köln-specific warning:** "Send your application to the correct district immigration office" — wrong office = appointment refused. (Source: th-koeln.de)
+10. **Booking page (overview):** [stadt-koeln.de/artikel/06415/index.html#ziel_0_72](https://www.stadt-koeln.de/artikel/06415/index.html#ziel_0_72) — links into per-district calendars from there.
 
-The Anmeldung spec required two passes of verification (v1.0 → v1.1 corrections). Expect the same here.
+### ⚠ Still TODO before v1.0 lock
+
+- **Worker / Blue Card document checklist** — TH Köln only covers students; worker requirements need a separate source (possibly BAMF *Make it in Germany* or stadt-koeln.de's Erwerbstätigkeit page).
+- **Blue Card salary thresholds for 2026** — €45,300 / €56,400 (regulated professions) was the 2024 rate per BAMF. Current values need check.
+- **Fees in euros** — first-issue and renewal. €100 / €110 is folklore.
+- **Fiktionsbescheinigung policy** — issued same-day at the appointment? Or by post?
+- **eAT card delivery time** — 4–6 weeks is folklore; check current Köln backlog.
+- **Per-district Bezirksausländeramt addresses + postal-code mapping** — needed for Screen 6 routing logic.
+- **Direct booking calendar URL** — overview page above links to per-district calendars; need to enumerate the 9 final URLs.
+- **Phone numbers** per district.
+
+The Anmeldung spec required two passes of verification before lock. This spec is partway through pass 1.
 
 ---
 
@@ -358,4 +392,4 @@ No code until v1.0 lock.
 
 ---
 
-*End of spec. Last revision: 2026-05-11 — v0.1 (initial draft).*
+*End of spec. Last revision: 2026-05-11 — v0.2 (verified facts pass against stadt-koeln.de + th-koeln.de; structural correction: 9 Bezirksausländerämter, not one central office; confirmed form 33-F07_ErstAntBefAuf is AcroForm-fillable like the Anmeldeformular).*
