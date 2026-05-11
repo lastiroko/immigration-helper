@@ -1,6 +1,91 @@
 # Architecture
 
-This document explains how Immigration Helper is put together — the domain model, authentication flow, the visa application state machine, the authorization patterns established during the Phase 1 audit, and the design decisions behind them. It's written for an engineer reviewing the codebase, not as a product overview.
+This document explains how the codebase is put together. **Two architectures coexist**: the post-pivot Köln sub-products (the current focus, all frontend) and the pre-pivot CRM (Spring Boot, deployed but in maintenance). Read both sections to understand any given file's lineage.
+
+## Köln sub-products (current focus, May 2026 → )
+
+Two standalone React flows live under `frontend-web/src/pages/`:
+
+```
+/                            → src/pages/Home.tsx               (public landing → links to both)
+/anmeldung-koeln             → src/pages/AnmeldungKoeln.tsx     (12 screens, shipped v1.3)
+/auslaenderbehoerde-koeln    → src/pages/AuslaenderbehoerdeKoeln.tsx (9 screens, shipped v1.0)
+```
+
+Each sub-product is a single React component that mounts its own state machine + screen router. **Zero new backend endpoints.** All flow state lives in `localStorage` under a per-product key with `schemaVersion: 1`:
+
+- `helfa.anmeldung-koeln.state`
+- `helfa.auslaenderbehoerde-koeln.state`
+
+### Per-flow internal layout
+
+Each sub-product folder follows the same shape:
+
+```
+src/pages/<flow-name>/
+  types.ts                 — <Flow>State + initialState + FlowApi
+  state.ts                 — load/save/clear localStorage + deriveScreen()
+  use<Flow>State.ts        — React hook returning FlowApi
+  ScreenRouter.tsx         — useMemo'd derive → switch over ScreenId
+  screens/                 — one file per screen, each takes { flow: FlowApi }
+  components/              — flow-specific UI (FlowShell, PhraseOverlay, etc.)
+  formFill.ts              — pdf-lib form-fill (lazy-imported inside the function)
+  parseConfirmation.ts     — German confirmation-email parser
+  calendar.ts              — .ics builder + Google Calendar deep links
+  *.test.ts                — vitest unit tests co-located with their module
+```
+
+### Single-source-of-truth state machines
+
+Neither sub-product persists `state.screen`. The current screen is **derived** from the data + intent fields on every render via `deriveScreen()`. The router wraps it in `useMemo`. This guarantees we can't drift between "what the user sees" and "what the state actually says."
+
+Four intent flags (`started`, `documentsConfirmed`, `wentToAppointment`, `wasSentHome` in Anmeldung; similar set in Ausländerbehörde) capture user actions that aren't otherwise represented in a data field.
+
+### Form-fill via the live official PDF
+
+Both sub-products fill Köln's official AcroForm PDFs directly:
+
+- **Anmeldung:** `34-F27_Anmeldung_v04_Vorl-1.10.pdf` (73 fields)
+- **Residence permit:** `33-F07_ErstantragErteilung_befristetenAufenthaltstitels-V10_Vorl-1.12.pdf` (130 fields)
+
+The form server (`formular-server.de`) sends `Access-Control-Allow-Origin: *`, so the browser fetches the live PDF on every Generate — no bundled snapshot, no drift risk if Köln tweaks the form.
+
+`pdf-lib` (~150 KB gz) is **dynamically imported** inside `fillAnmeldeformular()` / `fillResidencePermitForm()` so it doesn't sit in the initial bundle. Vite code-splits it. The PDF fetch and the pdf-lib import run via `Promise.all` to overlap latency.
+
+### Cross-flow continuity
+
+The residence-permit flow **reads** the Anmeldung flow's `localStorage` (via `formFill.ts:readAnmeldungSnapshot`). This:
+
+- Auto-skips the "have you done Anmeldung?" question if the Meldebescheinigung was recorded in the same browser.
+- Pre-fills the residence-permit form with personal details the user already entered.
+- Pre-routes the booking screen to the right Bezirksamt based on Köln postal code.
+
+Works because both flows live on the same origin and write to known `localStorage` keys. **No backend, no shared schema, no migrations** — a documented contract between two sub-products.
+
+### Testing
+
+`vitest` for pure functions, co-located as `*.test.ts`. **82 tests** as of v1.0 (Ausländerbehörde): parsers, state machines, PLZ→Bezirksamt mapping, ICS builder, code mappings. Run `npm test` in `frontend-web/`.
+
+### Public surface area
+
+```
+/                          public landing
+/anmeldung-koeln           Anmeldung flow (no auth)
+/auslaenderbehoerde-koeln  residence-permit flow (no auth)
+/imprint, /privacy, /terms public legal pages
+```
+
+All other routes (`/login`, `/dashboard-legacy`, `/onboarding`, etc.) are pre-pivot CRM routes — still mounted, still gated by `ProtectedRoute`, but `robots.txt` disallows them.
+
+### Error-handling + analytics
+
+`<ErrorBoundary>` at the app root catches runtime crashes and surfaces a friendly Restart instead of a white page. `<Analytics />` from `@vercel/analytics` is mounted alongside the router — cookieless, no PII, no signup.
+
+---
+
+## Pre-pivot CRM (legacy, deployed but in maintenance)
+
+The sections below describe the pre-pivot Spring Boot CRM (`VisaApplication` / status workflow / admin approval) still live behind `/login`. **The Köln sub-products are NOT built on top of this** — they share the deployment but not the data model. If you're working on `/anmeldung-koeln` or `/auslaenderbehoerde-koeln`, you can ignore everything below.
 
 ## System overview
 
