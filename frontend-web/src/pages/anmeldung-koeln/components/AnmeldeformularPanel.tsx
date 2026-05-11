@@ -282,151 +282,130 @@ export function AnmeldeformularPanel({ flow }: { flow: FlowApi }) {
       </Section>
 
       {/* ─── Where you came from ───────────────────────────────────────── */}
-      {(() => {
-        // Adapt the section to whether this is a within-Germany move
-        // (Ummeldung) or an arrival from abroad. originIsAbroad is set on
-        // Screen 1.5; null means "haven't asked yet" → show all fields.
-        const fromAbroad = flow.state.originIsAbroad === true;
-        const inGermany = flow.state.originIsAbroad === false;
-        return (
-          <Section
-            title={
-              inGermany
-                ? 'Your previous German address'
-                : fromAbroad
-                  ? 'Your previous address abroad'
-                  : 'Where you came from'
+      {/* All fields always visible — origin is a hint, not a filter. The
+          user fills whichever are relevant: in-Germany movers need PLZ /
+          Bundesland / Kreis / Tag des Auszugs; from-abroad arrivals need
+          Country. Hiding fields based on Screen 1.5 led to blank slots
+          when origin state was wrong or null. */}
+      <Section
+        title="Where you came from"
+        hint={
+          flow.state.originIsAbroad === false
+            ? 'Within-Germany move (Ummeldung) — fill PLZ, Bundesland, Kreis and the Tag des Auszugs. Leave Country blank.'
+            : flow.state.originIsAbroad === true
+              ? 'Arriving from abroad — fill Country. PLZ / Bundesland / Kreis only if you have them.'
+              : 'Fill the fields that apply to your previous address.'
+        }
+      >
+        <Field
+          label="Move-out date (Tag des Auszugs)"
+          hint="In-Germany moves only — leave blank if from abroad."
+        >
+          <input
+            type="date"
+            value={draft.moveOutDate}
+            onChange={(e) => update('moveOutDate', e.target.value)}
+            className={fieldClass}
+          />
+        </Field>
+        <Field
+          label="Country"
+          hint="From-abroad arrivals only — leave blank for in-Germany moves."
+        >
+          <input
+            type="text"
+            value={draft.prevCountry}
+            onChange={(e) => update('prevCountry', e.target.value)}
+            className={fieldClass}
+            placeholder="e.g. Nigeria"
+          />
+        </Field>
+        <Field label="Street + number" full>
+          <input
+            type="text"
+            value={draft.prevStreet}
+            onChange={(e) => update('prevStreet', e.target.value)}
+            className={fieldClass}
+            placeholder="e.g. Elbestr. 46 / 12 Allen Avenue"
+          />
+        </Field>
+        <Field label="City">
+          <input
+            type="text"
+            value={draft.prevCity}
+            onChange={(e) => update('prevCity', e.target.value)}
+            className={fieldClass}
+            placeholder="e.g. Frankfurt / Lagos"
+          />
+        </Field>
+        <Field label="Postal code (PLZ)" hint="In-Germany moves only.">
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]{5}"
+            value={draft.prevPostalCode}
+            onChange={(e) => update('prevPostalCode', e.target.value)}
+            className={fieldClass}
+            placeholder="e.g. 60311"
+          />
+        </Field>
+        <Field label="Bundesland" hint="In-Germany moves only.">
+          <input
+            type="text"
+            value={draft.prevBundesland}
+            onChange={(e) => update('prevBundesland', e.target.value)}
+            className={fieldClass}
+            placeholder="e.g. Hessen, Hamburg, Bayern"
+          />
+        </Field>
+        <Field
+          label="Kreis (district)"
+          hint="In-Germany moves only — Stadtkreis or Landkreis."
+          full
+        >
+          <input
+            type="text"
+            value={draft.prevKreis}
+            onChange={(e) => update('prevKreis', e.target.value)}
+            className={fieldClass}
+            placeholder="e.g. Frankfurt am Main, Hamburg-Mitte"
+          />
+        </Field>
+        <Field label="That place was a:" full>
+          <RadioRow
+            value={draft.residenceTypeOld}
+            onChange={(v) => update('residenceTypeOld', v)}
+            options={RESIDENCE_OPTIONS}
+            allowEmpty
+          />
+        </Field>
+        <Field label="Are you keeping that place?" full>
+          <RadioRow
+            value={draft.keepingOldResidence}
+            onChange={(v) =>
+              update('keepingOldResidence', v as 'yes' | 'no' | '')
             }
-            hint={
-              inGermany
-                ? 'Same form whether it’s an Anmeldung or an Ummeldung — you just need a few extra slots filled.'
-                : fromAbroad
-                  ? 'Country matters; postal code and Bundesland do not.'
-                  : undefined
-            }
-          >
-            {inGermany && (
-              <Field
-                label="Move-out date (Tag des Auszugs)"
-                hint="When you formally left the previous address — usually your lease end-date."
-              >
-                <input
-                  type="date"
-                  value={draft.moveOutDate}
-                  onChange={(e) => update('moveOutDate', e.target.value)}
-                  className={fieldClass}
-                />
-              </Field>
-            )}
-            <Field label="Street + number" full>
-              <input
-                type="text"
-                value={draft.prevStreet}
-                onChange={(e) => update('prevStreet', e.target.value)}
-                className={fieldClass}
-                placeholder={
-                  inGermany ? 'e.g. Mönckebergstraße 7' : 'e.g. 12 Allen Avenue'
-                }
-              />
-            </Field>
-            <Field label="City">
-              <input
-                type="text"
-                value={draft.prevCity}
-                onChange={(e) => update('prevCity', e.target.value)}
-                className={fieldClass}
-                placeholder={inGermany ? 'e.g. Hamburg' : 'e.g. Lagos'}
-              />
-            </Field>
-            {!fromAbroad && (
-              <Field label="Postal code">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]{5}"
-                  value={draft.prevPostalCode}
-                  onChange={(e) => update('prevPostalCode', e.target.value)}
-                  className={fieldClass}
-                  placeholder="e.g. 20095"
-                />
-              </Field>
-            )}
-            {!fromAbroad && (
-              <Field label="Bundesland">
-                <input
-                  type="text"
-                  value={draft.prevBundesland}
-                  onChange={(e) => update('prevBundesland', e.target.value)}
-                  className={fieldClass}
-                  placeholder="e.g. Hamburg, Bayern"
-                />
-              </Field>
-            )}
-            {!fromAbroad && (
-              <Field label="Kreis (district)" hint="Stadtkreis or Landkreis.">
-                <input
-                  type="text"
-                  value={draft.prevKreis}
-                  onChange={(e) => update('prevKreis', e.target.value)}
-                  className={fieldClass}
-                />
-              </Field>
-            )}
-            {!inGermany && (
-              <Field
-                label="Country"
-                hint={
-                  fromAbroad
-                    ? 'The country you arrived from.'
-                    : 'If from abroad — leave blank for in-Germany moves.'
-                }
-              >
-                <input
-                  type="text"
-                  value={draft.prevCountry}
-                  onChange={(e) => update('prevCountry', e.target.value)}
-                  className={fieldClass}
-                  placeholder="e.g. Nigeria"
-                />
-              </Field>
-            )}
-            <Field label="That place was a:" full>
-              <RadioRow
-                value={draft.residenceTypeOld}
-                onChange={(v) => update('residenceTypeOld', v)}
-                options={RESIDENCE_OPTIONS}
-                allowEmpty
-              />
-            </Field>
-            <Field label="Are you keeping that place?" full>
-              <RadioRow
-                value={draft.keepingOldResidence}
-                onChange={(v) =>
-                  update('keepingOldResidence', v as 'yes' | 'no' | '')
-                }
-                options={[
-                  { value: 'no', label: 'No' },
-                  { value: 'yes', label: 'Yes' },
-                ]}
-              />
-            </Field>
-            {draft.keepingOldResidence === 'yes' && (
-              <Field label="Keeping it as:" full>
-                <RadioRow
-                  value={draft.keepingOldAs}
-                  onChange={(v) =>
-                    update('keepingOldAs', v as 'haupt' | 'neben' | '')
-                  }
-                  options={[
-                    { value: 'haupt', label: 'Hauptwohnung (main)' },
-                    { value: 'neben', label: 'Nebenwohnung (secondary)' },
-                  ]}
-                />
-              </Field>
-            )}
-          </Section>
-        );
-      })()}
+            options={[
+              { value: 'no', label: 'No' },
+              { value: 'yes', label: 'Yes' },
+            ]}
+          />
+        </Field>
+        {draft.keepingOldResidence === 'yes' && (
+          <Field label="Keeping it as:" full>
+            <RadioRow
+              value={draft.keepingOldAs}
+              onChange={(v) =>
+                update('keepingOldAs', v as 'haupt' | 'neben' | '')
+              }
+              options={[
+                { value: 'haupt', label: 'Hauptwohnung (main)' },
+                { value: 'neben', label: 'Nebenwohnung (secondary)' },
+              ]}
+            />
+          </Field>
+        )}
+      </Section>
 
       {/* ─── Köln address ──────────────────────────────────────────────── */}
       <Section title="Where you're moving to in Köln">
