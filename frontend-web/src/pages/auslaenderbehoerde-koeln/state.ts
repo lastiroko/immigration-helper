@@ -79,20 +79,10 @@ export function deriveScreen(s: AuslaenderbehoerdeState): ScreenId {
   return 'landing';
 }
 
-// The 9 Bezirksausländerämter — same district names as Anmeldung's
-// Kundenzentren, almost certainly the same buildings + separate
-// departments. Postal-code routing per Köln district. Addresses
-// remain TODO until v1.0 spec verification.
-export const BEZIRKSAUSLAENDERAEMTER = [
-  'Innenstadt',
-  'Rodenkirchen',
-  'Lindenthal',
-  'Ehrenfeld',
-  'Nippes',
-  'Chorweiler',
-  'Porz',
-  'Kalk',
-  'Mülheim',
-] as const;
+// Re-exports for backwards compatibility — full data lives in
+// ./bezirksaemter.ts (verified addresses + postal-code mapping).
+import { BEZIRKSAEMTER } from './bezirksaemter';
+export { BEZIRKSAEMTER, bezirksamtForPostalCode, getBezirksamt, isMuelheim, BOOKING_URL, BUERGERTELEFON } from './bezirksaemter';
 
-export type BezirksamtName = (typeof BEZIRKSAUSLAENDERAEMTER)[number];
+export const BEZIRKSAUSLAENDERAEMTER = BEZIRKSAEMTER.map((b) => b.name);
+export type BezirksamtName = string;

@@ -40,6 +40,65 @@ export type AuslaenderbehoerdeState = {
   appointment: { date: string; time: string; bezirksamt: string } | null;
   fiktionsbescheinigungObtainedAt: string | null;
   permitExpires: string | null;
+  /** Details captured on Screen 5 for the form-fill. */
+  residencePermitDetails: ResidencePermitDetails | null;
+};
+
+export type ResidencePermitDetails = {
+  // Physical descriptors required on the German form, not in Anmeldung
+  height: string; // cm as string (form accepts text)
+  eyeColor: string;
+  // Contact
+  phone: string;
+  email: string;
+  // For workers only
+  employer: {
+    name: string;
+    bossName: string; // single field, form has chefname + chefvorname
+    street: string;
+    postalCode: string;
+    city: string;
+    phone: string;
+    email: string;
+    jobTitle: string;
+  };
+  monthlyIncomeGross: string;
+  // For students only
+  university: string;
+  studyField: string;
+  studyWebsite: string;
+  // Common
+  insuranceProvider: string;
+  speaksGerman: boolean | null;
+  hasCriminalRecord: boolean | null;
+  hasOpenInvestigation: boolean | null;
+  hasBeenDeported: boolean | null;
+};
+
+export const emptyResidencePermitDetails: ResidencePermitDetails = {
+  height: '',
+  eyeColor: '',
+  phone: '',
+  email: '',
+  employer: {
+    name: '',
+    bossName: '',
+    street: '',
+    postalCode: '',
+    city: '',
+    phone: '',
+    email: '',
+    jobTitle: '',
+  },
+  monthlyIncomeGross: '',
+  university: '',
+  studyField: '',
+  studyWebsite: '',
+  insuranceProvider: '',
+  speaksGerman: null,
+  hasCriminalRecord: null,
+  hasOpenInvestigation: null,
+  hasBeenDeported: null,
 };
 
 export const initialState: AuslaenderbehoerdeState = {
@@ -67,6 +126,7 @@ export const initialState: AuslaenderbehoerdeState = {
   appointment: null,
   fiktionsbescheinigungObtainedAt: null,
   permitExpires: null,
+  residencePermitDetails: null,
 };
 
 export type FlowApi = {
