@@ -4,6 +4,7 @@
 # not the focus.
 
 User-agent: *
+Allow: /
 Allow: /anmeldung-koeln
 Allow: /auslaenderbehoerde-koeln
 Allow: /imprint
