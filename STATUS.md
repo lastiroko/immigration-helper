@@ -2,8 +2,8 @@
 
 > Living snapshot. Update at the end of each work session. Read this file first when onboarding a new Claude session — it tells you where we are *now*. Spec and design docs live in `docs/`; architecture in `ARCHITECTURE.md`.
 
-**Last updated:** 2026-05-11 (overnight session)
-**Status:** Anmeldung Köln v1 **shipped + polished**. Residence permit (Ausländerbehörde) **scaffolded** at `/auslaenderbehoerde-koeln` with v0.2 spec. Vitest suite (45 tests) + GitHub Actions CI in place.
+**Last updated:** 2026-05-11 (evening session 2)
+**Status:** **Both sub-products shipped.** `/anmeldung-koeln` v1.3 + `/auslaenderbehoerde-koeln` v1.0. Public landing at `/`. Cross-flow continuity wired. 82 unit tests. Vercel Analytics + ErrorBoundary in place. Ready for friend-test + Reddit launch.
 
 ---
 
@@ -47,25 +47,37 @@ State machine is data-derived (no `state.screen`) — single source of truth. Sc
 
 ### Immediate next step
 
-**Two parallel tracks, founder-led:**
+**Founder tasks:**
 
-1. **Real-user test of `/anmeldung-koeln`** — operating manual at `docs/usability-test-checklist.md`. Find a friend, sit them down with their phone, watch. Spec criterion #1.
+1. **Friend-test of `/anmeldung-koeln`** — operating manual at `docs/usability-test-checklist.md`. Spec criterion #1.
+2. **Reddit launch post** — draft at `docs/launch/reddit-draft.md`. Read, edit, post to r/cologne first.
+3. **Smoke-check the residence-permit form-fill** — `C:/Users/phili/Downloads/smoke-residence-permit.pdf` was dropped in your Downloads. Open and verify a sample Maria Smith / TechCorp worker permit landed in the right boxes on Köln's 33-F07.
 
-2. **Verify the rest of the residence permit spec** so `/auslaenderbehoerde-koeln` v1.0 can lock and we can fill the scaffold with real UI. Outstanding TODOs in `docs/specs/auslaenderbehoerde-koeln-v1-spec.md` Verified-facts section: worker-permit document checklist, 2026 Blue Card salary thresholds, fees in euros, Fiktionsbescheinigung same-day policy, eAT delivery time, per-district Bezirksamt addresses + PLZ-to-office mapping, the 9 booking calendar URLs.
+### Evening session 2 summary (2026-05-11, commits `a6e9f44..2527467`)
 
-**Overnight session summary (2026-05-11, commits `ac85d2c..bec2e3a`):**
-- Spec v1.3 patched + pushed; status surfaced as shipped.
-- Lazy-loaded pdf-lib → initial JS bundle dropped 297 KB gz → 121 KB gz (-59%).
-- Vitest suite added with 45 unit tests covering parser, state machine, ICS builder, code mappings.
-- OG / Twitter meta + brand favicon + canonical URL.
-- Robots.txt + sitemap.xml so search engines can find both flows.
-- GitHub Actions CI: `tsc -b && lint && test && build` on every PR + push to main.
-- README "Sub-products" section.
-- Reddit launch post draft at `docs/launch/reddit-draft.md`.
-- Residence permit spec verified to v0.2 against stadt-koeln.de + th-koeln.de (structural correction: 9 Bezirksausländerämter, postal-code-routed; form 33-F07_ErstAntBefAuf confirmed AcroForm-fillable).
-- `/auslaenderbehoerde-koeln` route scaffolded (9 screens, real UI for screens 0-4, scaffolds for 5-8 pending spec lock). Cross-flow read of Anmeldung's `localStorage` auto-skips Screen 3 for users who already finished Anmeldung in the same browser.
+**Track 1 — Ausländerbehörde Köln to v1.0:**
+- Verified all v0.2 spec TODOs via web-search + WebFetch. Locked the spec at v1.0.
+- Built `bezirksaemter.ts` with full PLZ → office mapping for all 9 districts.
+- Built `formFill.ts` for form 33-F07_ErstAntBefAuf (130 AcroForm fields) — pre-selects the right Bezirksamt dropdown, pre-fills basics from Anmeldung's cross-flow `localStorage`, collects worker/student-specific extras via `AntragsformularPanel`.
+- Real UI for Screens 5, 6, 7, 8 (the prior scaffolds). Cross-flow continuity now meaningful: PLZ auto-routes to the right Bezirksamt on Screen 6; Screen 5's form-fill reuses Anmeldung's personal details.
+- 37 new unit tests (PLZ mapping with partition invariant, parser, deriveScreen) — total 82.
 
-(One outstanding manual check from Anmeldung v1.0 — confirming walk-in is currently active by calling 0221/221-0 — is still on the founder, not blocking. The Walk-in suspended override is now a one-line constant in Screen5PickPath.tsx.)
+**Track 2 — Launch polish:**
+- Public landing at `/` — replaces the auth-wall redirect. Links to both sub-products + the existing legal pages.
+- Vercel Analytics — cookieless, mounted next to the router.
+- ErrorBoundary at the app root — friendly Restart instead of white-page crashes.
+- LoadingFallback component available for future Suspense use.
+
+**Track 3 — Docs:**
+- ARCHITECTURE.md gained a new top section for the two Köln sub-products (state-machine pattern, single-source-of-truth derivation, form-fill, cross-flow continuity, testing). Pre-pivot CRM section preserved.
+- CONTRIBUTING.md is new — quick start, mental model, how-to-add-a-screen, spec → impl pattern, conventions, what NOT to do.
+- .env.example expanded with a header explaining what each var is for and which routes use it.
+
+**Verified manually:**
+- 82/82 tests pass
+- `tsc -b` clean
+- `npm run build` clean
+- Smoke PDF generated at 310 KB (Köln's 33-F07 form template + ~25 filled fields)
 
 ---
 
@@ -141,6 +153,12 @@ These were the post-launch hardening items as of 2026-05-01. **All parked for v1
 *Auto-pasted from `git log --oneline -10`; not hand-maintained. Refresh when updating STATUS.md. (The commit that updates this section will not appear in it — that's the bootstrap.)*
 
 ```
+2527467 docs: ARCHITECTURE.md update + CONTRIBUTING.md + .env.example expansion
+871c562 feat(launch): public root landing + Vercel Analytics + ErrorBoundary
+5b4b596 test(auslaenderbehoerde-koeln): 37 unit tests for new pure functions
+7d99181 feat(auslaenderbehoerde-koeln): fill scaffold with real UI per v1.0 spec
+a6e9f44 docs(spec): lock Ausländerbehörde Köln spec at v1.0
+74a86ae docs(status): overnight session summary + next-step retarget
 40cc60c feat(auslaenderbehoerde-koeln): scaffold residence permit flow
 bf71533 docs: Reddit launch post draft
 18ba6b0 docs: add 'Sub-products' section to README
@@ -150,12 +168,6 @@ a91ba49 feat(seo): add robots.txt + sitemap.xml
 78c8edc test: add Vitest + 45 unit tests for pure functions
 d55f2bc perf(form-fill): lazy-load pdf-lib on first Generate click
 bec80e2 docs(spec): bump residence permit spec to v0.2 (verified facts pass)
-bb5779d docs(spec): draft v0.1 of Ausländerbehörde Köln (residence permit) flow
-519c6f2 docs: usability test checklist for friend-test (criterion #1)
-7188905 feat(anmeldeformular-panel): make all sections collapsible
-653992c feat(screen-8): add 'Help me with this' inline reveal per timeline card
-16c26b1 feat(screen-5): add WALK_IN_AVAILABLE override per spec
-241859a docs(status): mark Anmeldung Köln v1 as shipped
 ```
 
 `archive/pre-koeln-pivot` adds one snapshot commit (`5553b03`) on top of `41930bf`.
