@@ -205,3 +205,74 @@
   from { opacity: 0; transform: translate(-50%, 8px); }
   to   { opacity: 1; transform: translate(-50%, 0); }
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+   Print stylesheet
+   Goal: a user on Screen 8 of either flow can Ctrl+P the timeline as a
+   single fridge-printable page. Hide header / footer / CTAs / "Add to
+   Google Calendar" / "Help me with this" buttons; show just the
+   timeline cards in a clean serial layout. Page elements outside the
+   .print-keep allowlist disappear when printed.
+   ────────────────────────────────────────────────────────────────────── */
+
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+
+  /* Hide chrome that doesn't belong on paper */
+  header, footer { display: none !important; }
+  .btn-pill-cta, .btn-pill-ghost { display: none !important; }
+  /* The "Add to Google Calendar" + "Help me with this" rows render as
+     flex containers; hide whole rows containing only those buttons. */
+  .toast-error { display: none !important; }
+
+  /* Don't force display-headline to all-caps Anton in print — use
+     readable serif-y system font instead. */
+  .display-headline {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    text-transform: none !important;
+    letter-spacing: -0.01em !important;
+    font-weight: 800 !important;
+  }
+
+  /* Surface cards: drop shadow + colored borders, keep the structure */
+  .surface-card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 8mm;
+  }
+
+  /* Ghost watermark — don't waste toner on a hero decoration */
+  .ghost-watermark { display: none !important; }
+
+  /* Chip-fact pills are decorative; show them subtly */
+  .chip-fact {
+    background: #fff !important;
+    border: 1px solid #888 !important;
+    box-shadow: none !important;
+  }
+
+  /* Headline accent (lime word) → black underline so it stays readable
+     on a black-and-white printer */
+  .headline-accent {
+    color: #000 !important;
+    text-shadow: none !important;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+
+  /* Make sure links print their hrefs after the anchor text so a paper
+     reader can find them later */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #555;
+    word-break: break-all;
+  }
+
+  /* A4-friendly margins */
+  @page {
+    margin: 14mm 12mm;
+  }
+}

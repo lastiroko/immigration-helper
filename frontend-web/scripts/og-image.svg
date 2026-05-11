@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0A1410"/>
+      <stop offset="100%" stop-color="#15302A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background gradient -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Big ghost watermark — sits behind the headline -->
+  <text x="60" y="500" font-family="Arial Black, Impact, sans-serif"
+        font-weight="900" font-size="320" letter-spacing="-12"
+        fill="rgba(255,255,255,0.04)" textLength="1080" lengthAdjust="spacingAndGlyphs">HELFA</text>
+
+  <!-- Eyebrow -->
+  <text x="80" y="120" font-family="-apple-system, Segoe UI, sans-serif"
+        font-weight="500" font-size="22" letter-spacing="6"
+        fill="rgba(255,255,255,0.7)">KÖLN · GERMAN BUREAUCRACY · IN ENGLISH</text>
+
+  <!-- Main headline (two lines) -->
+  <text x="80" y="220" font-family="Arial Black, Impact, sans-serif"
+        font-weight="900" font-size="78" letter-spacing="-2" fill="#FFFFFF">German bureaucracy,</text>
+  <text x="80" y="310" font-family="Arial Black, Impact, sans-serif"
+        font-weight="900" font-size="78" letter-spacing="-2" fill="#C8FF3D">in plain English.</text>
+
+  <!-- Subline -->
+  <text x="80" y="380" font-family="-apple-system, Segoe UI, sans-serif"
+        font-weight="500" font-size="28" fill="rgba(255,255,255,0.7)">Anmeldung + residence permit, walked through once, perfectly. Free.</text>
+
+  <!-- Chip row -->
+  <g transform="translate(80, 470)">
+    <rect width="220" height="56" rx="28" fill="#C8FF3D"/>
+    <text x="34" y="36" font-family="-apple-system, Segoe UI, sans-serif"
+          font-weight="700" font-size="22" fill="#0A1410">✓ No signup</text>
+  </g>
+  <g transform="translate(320, 470)">
+    <rect width="260" height="56" rx="28" fill="#C8FF3D"/>
+    <text x="34" y="36" font-family="-apple-system, Segoe UI, sans-serif"
+          font-weight="700" font-size="22" fill="#0A1410">✓ Fills the form</text>
+  </g>
+  <g transform="translate(600, 470)">
+    <rect width="220" height="56" rx="28" fill="#C8FF3D"/>
+    <text x="34" y="36" font-family="-apple-system, Segoe UI, sans-serif"
+          font-weight="700" font-size="22" fill="#0A1410">✓ Köln-only</text>
+  </g>
+
+  <!-- Brand corner -->
+  <rect x="1060" y="40" width="80" height="80" rx="18" fill="#0A1410" stroke="#FFFFFF" stroke-width="2"/>
+  <rect x="1077" y="58" width="10" height="44" fill="#FFFFFF"/>
+  <rect x="1113" y="58" width="10" height="44" fill="#FFFFFF"/>
+  <rect x="1077" y="75" width="46" height="10" fill="#C8FF3D"/>
+
+  <!-- Footer hint -->
+  <text x="80" y="590" font-family="-apple-system, Segoe UI, sans-serif"
+        font-weight="500" font-size="20" fill="rgba(255,255,255,0.5)">helfa · immigration-helper-taupe.vercel.app</text>
+</svg>

@@ -12,6 +12,14 @@ type FlowShellProps = {
 export function FlowShell({ children, onBack, onReset }: FlowShellProps) {
   return (
     <div className="min-h-screen flex flex-col bg-helfa-cream text-helfa-ink">
+      {/* Skip-to-content link — hidden until focused via Tab, helps
+          keyboard / screen-reader users jump past the header. */}
+      <a
+        href="#flow-main"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-full focus:bg-helfa-ink focus:px-4 focus:py-2 focus:text-sm focus:text-white focus:outline focus:outline-2 focus:outline-helfa-lime"
+      >
+        Skip to main content
+      </a>
       <header className="px-5 pt-6 pb-2 sm:px-8 sm:pt-8">
         <div className="mx-auto flex max-w-[640px] items-center justify-between">
           <span className="display-headline text-sm tracking-[0.18em] text-helfa-slate">
@@ -24,13 +32,13 @@ export function FlowShell({ children, onBack, onReset }: FlowShellProps) {
               className="text-sm font-medium text-helfa-slate hover:text-helfa-ink"
               aria-label="Back to previous step"
             >
-              ← Back
+              <span aria-hidden>←</span> Back
             </button>
           )}
         </div>
       </header>
 
-      <main className="flex-1 px-5 sm:px-8">
+      <main id="flow-main" className="flex-1 px-5 sm:px-8">
         <div className="mx-auto max-w-[640px]">{children}</div>
       </main>
 

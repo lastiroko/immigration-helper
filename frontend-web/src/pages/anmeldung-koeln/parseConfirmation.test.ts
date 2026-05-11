@@ -57,6 +57,29 @@ describe('parseConfirmation', () => {
     expect(out.kundenzentrum).toBe('Innenstadt');
   });
 
+  it('parses "10 Uhr" with no colon (assumes :00)', () => {
+    const text = 'Termin am 20.05.2026 um 10 Uhr im Kundenzentrum Innenstadt.';
+    expect(parseConfirmation(text)).toEqual({
+      date: '2026-05-20',
+      time: '10:00',
+      kundenzentrum: 'Innenstadt',
+    });
+  });
+
+  it('parses 2-digit year DD.MM.YY → 20YY', () => {
+    const text = 'Termin am 15.06.26 um 09:30 im Kundenzentrum Kalk.';
+    expect(parseConfirmation(text)).toEqual({
+      date: '2026-06-15',
+      time: '09:30',
+      kundenzentrum: 'Kalk',
+    });
+  });
+
+  it('handles "HH:MM Uhr" (colon time + Uhr suffix)', () => {
+    const text = 'Termin am 20.05.2026 um 14:30 Uhr im Kundenzentrum Ehrenfeld.';
+    expect(parseConfirmation(text).time).toBe('14:30');
+  });
+
   it('preserves all 9 Kundenzentrum names', () => {
     const names = [
       'Chorweiler',

@@ -63,6 +63,20 @@ describe('Auslaenderbehoerde parseConfirmation', () => {
     });
   });
 
+  it('parses "10 Uhr" with no colon (assumes :00)', () => {
+    const text = 'Termin am 20.05.2026 um 10 Uhr im Bezirksausländeramt Innenstadt.';
+    expect(parseConfirmation(text)).toEqual({
+      date: '2026-05-20',
+      time: '10:00',
+      bezirksamt: 'Innenstadt',
+    });
+  });
+
+  it('parses 2-digit year DD.MM.YY → 20YY', () => {
+    const text = 'Termin am 15.06.26 um 09:30 im Bezirksausländeramt Kalk.';
+    expect(parseConfirmation(text).date).toBe('2026-06-15');
+  });
+
   it('preserves all 9 Bezirksamt names', () => {
     const names = [
       'Chorweiler',
