@@ -227,6 +227,7 @@ export function AnmeldeformularPanel({ flow }: { flow: FlowApi }) {
       <Section
         title="Your ID document"
         hint="Skip if you don't have these handy — the clerk can fill them at the desk."
+        defaultOpen={false}
       >
         <Field label="Document type">
           <select
@@ -784,22 +785,44 @@ function Section({
   title,
   hint,
   children,
+  defaultOpen = true,
 }: {
   title: string;
   hint?: string;
   children: ReactNode;
+  defaultOpen?: boolean;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <section>
-      <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-helfa-slate">
-        {title}
-      </h4>
-      {hint && (
-        <p className="mt-0.5 text-[11px] leading-snug text-helfa-slate">
-          {hint}
-        </p>
+    <section className="rounded-xl border border-helfa-ink/10">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-helfa-stone/30"
+      >
+        <span>
+          <span className="block text-xs font-semibold uppercase tracking-[0.18em] text-helfa-slate">
+            {title}
+          </span>
+          {hint && (
+            <span className="mt-0.5 block text-[11px] leading-snug text-helfa-slate">
+              {hint}
+            </span>
+          )}
+        </span>
+        <span
+          aria-hidden
+          className="ml-3 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-helfa-ink/15 text-xs font-bold text-helfa-ink"
+        >
+          {open ? '−' : '+'}
+        </span>
+      </button>
+      {open && (
+        <div className="grid gap-3 px-4 pb-4 pt-1 sm:grid-cols-2">
+          {children}
+        </div>
       )}
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">{children}</div>
     </section>
   );
 }
