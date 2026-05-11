@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { FlowApi, AnmeldungState } from '../types';
 import { FlowShell } from '../components/FlowShell';
 import {
@@ -15,6 +15,8 @@ type TimelineItem = {
   body: string;
   /** ISO date if a calendar reminder makes sense; null otherwise. */
   reminderDate: string | null;
+  /** Honest "what's coming for this topic" message. Shown on click. */
+  helpText: string;
 };
 
 function addDays(iso: string, n: number): string {
@@ -32,6 +34,8 @@ function buildTimeline(s: AnmeldungState): TimelineItem[] {
       title: 'Save your Meldebescheinigung',
       body: 'Photograph it. Keep the original somewhere safe. You will need this document many times in your first year — bank, insurance, residence permit, contracts.',
       reminderDate: null,
+      helpText:
+        'Snap a photo with your phone and email it to yourself. A proper document vault inside Helfa is on the roadmap once Anmeldung proves itself.',
     },
     {
       key: 'steuerid',
@@ -39,6 +43,8 @@ function buildTimeline(s: AnmeldungState): TimelineItem[] {
       title: 'Steuer-ID arrives by post',
       body: 'Brown envelope, looks official. Do not throw it away. You need it for work, banking, and tax — forever.',
       reminderDate: addDays(day0, 14),
+      helpText:
+        'Sender: Bundeszentralamt für Steuern (BZSt). It is not junk mail. If 4 weeks pass with nothing, you can request a re-send via bzst.de — a guided re-send flow is on the list.',
     },
     {
       key: 'gez',
@@ -46,6 +52,8 @@ function buildTimeline(s: AnmeldungState): TimelineItem[] {
       title: 'GEZ letter (€18.36/month broadcasting fee)',
       body: 'A letter from "Beitragsservice" demands €18.36/month. PAY IT — ignoring it tanks your credit score (SCHUFA). You can apply for exemption only if you are on benefits.',
       reminderDate: addDays(day0, 14),
+      helpText:
+        'Easiest: set up SEPA Lastschrift on rundfunkbeitrag.de so you never miss a quarter. Exemption (Befreiung) is rare — only BAföG, ALG II, asylum-seeker benefits qualify. A SEPA-setup walkthrough is on the list.',
     },
     s.isNonEU === true
       ? {
@@ -54,6 +62,8 @@ function buildTimeline(s: AnmeldungState): TimelineItem[] {
           title: 'Apply for your residence permit',
           body: 'Apply at the Ausländerbehörde. The wait list in Köln is long — start now, not in month 2.',
           reminderDate: addDays(day0, 30),
+          helpText:
+            "Book at termine.stadt-koeln.de under 'Aufenthaltstitel — Erstantrag.' Documents vary by permit type (study / work / family / Blue Card). A full Ausländerbehörde flow with per-purpose checklists is the next thing we ship.",
         }
       : null,
     {
@@ -62,6 +72,8 @@ function buildTimeline(s: AnmeldungState): TimelineItem[] {
       title: 'Pick a Krankenkasse (health insurance)',
       body: "If you're employed, tell HR your choice. TK is the easiest for English speakers. Mandatory in Germany.",
       reminderDate: addDays(day0, 7),
+      helpText:
+        'TK has full English support: tk.de/en. AOK and Barmer also work but expect more German. Self-employed / freelance? Different rules — check artist insurance (KSK) or private. A side-by-side Krankenkasse picker is on the list.',
     },
     {
       key: 'bank',
@@ -69,6 +81,8 @@ function buildTimeline(s: AnmeldungState): TimelineItem[] {
       title: 'Open a German bank account',
       body: 'You needed Anmeldung for this. N26 or bunq if you want it in English in 10 minutes. Most employers and landlords expect a SEPA-capable IBAN.',
       reminderDate: null,
+      helpText:
+        'N26 / bunq: app-only, English, ~10 min. Brick-and-mortar (DKB, Sparkasse, Comdirect): book a branch appointment, bring your Meldebescheinigung + passport. An account-comparison flow is on the list.',
     },
   ];
   return items.filter((i): i is TimelineItem => i !== null);
@@ -116,36 +130,11 @@ export function Screen8WhatsNext({ flow }: { flow: FlowApi }) {
       </div>
 
       <ol className="mt-8 space-y-3">
-        {timeline.map((item) => {
-          const event = toCalendarEvent(item);
-          return (
-            <li key={item.key}>
-              <article className="surface-card overflow-hidden">
-                <div className="px-5 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-helfa-slate">
-                    {item.band}
-                  </p>
-                  <h3 className="mt-1 font-semibold text-helfa-ink">
-                    {item.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-helfa-ink/80">
-                    {item.body}
-                  </p>
-                  {event && (
-                    <a
-                      href={googleCalendarUrl(event)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-pill-ghost mt-4 inline-flex"
-                    >
-                      Add to Google Calendar ↗
-                    </a>
-                  )}
-                </div>
-              </article>
-            </li>
-          );
-        })}
+        {timeline.map((item) => (
+          <li key={item.key}>
+            <TimelineCard item={item} />
+          </li>
+        ))}
       </ol>
 
       <div className="mt-10 mb-4">
@@ -163,5 +152,48 @@ export function Screen8WhatsNext({ flow }: { flow: FlowApi }) {
         friend who's about to move — that's how we grow.
       </p>
     </FlowShell>
+  );
+}
+
+function TimelineCard({ item }: { item: TimelineItem }) {
+  const [helpOpen, setHelpOpen] = useState(false);
+  const event = toCalendarEvent(item);
+  return (
+    <article className="surface-card overflow-hidden">
+      <div className="px-5 py-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-helfa-slate">
+          {item.band}
+        </p>
+        <h3 className="mt-1 font-semibold text-helfa-ink">{item.title}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-helfa-ink/80">
+          {item.body}
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {event && (
+            <a
+              href={googleCalendarUrl(event)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-pill-ghost"
+            >
+              Add to Google Calendar ↗
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={() => setHelpOpen((o) => !o)}
+            aria-expanded={helpOpen}
+            className="btn-pill-ghost"
+          >
+            {helpOpen ? '− Hide help' : 'Help me with this'}
+          </button>
+        </div>
+        {helpOpen && (
+          <div className="mt-3 rounded-xl bg-helfa-stone/40 px-4 py-3 text-sm leading-relaxed text-helfa-ink/85">
+            {item.helpText}
+          </div>
+        )}
+      </div>
+    </article>
   );
 }
