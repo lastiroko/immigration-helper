@@ -75,6 +75,27 @@ function religionValue(
 }
 
 /**
+ * Split a single "first name(s)" string into Rufname (the name you go by)
+ * and weitere Vornamen (additional given names). Convention: first token
+ * is the Rufname, the rest are weitere Vornamen.
+ *
+ * Examples:
+ *   "John"               → { ruf: "John",  weitere: "" }
+ *   "John Michael"       → { ruf: "John",  weitere: "Michael" }
+ *   "Anna-Maria Theresa" → { ruf: "Anna-Maria", weitere: "Theresa" }
+ */
+function splitFirstNames(input: string): { ruf: string; weitere: string } {
+  const trimmed = input.trim();
+  if (!trimmed) return { ruf: '', weitere: '' };
+  const idx = trimmed.indexOf(' ');
+  if (idx === -1) return { ruf: trimmed, weitere: '' };
+  return {
+    ruf: trimmed.slice(0, idx),
+    weitere: trimmed.slice(idx + 1).trim(),
+  };
+}
+
+/**
  * Fetches the live official Köln Anmeldeformular PDF, fills in the user's
  * details via AcroForm, and returns a Blob URL the caller can open or
  * download. Throws on network failure or PDF parse failure — caller surfaces.
@@ -120,9 +141,11 @@ export async function fillAnmeldeformular(
   };
 
   // ── Person 1 — basics ──────────────────────────────────────────────────
+  const p1Names = splitFirstNames(details.firstName);
   setText('antragsteller.familienname_1', details.familyName);
   setText('antragsteller.gebname_1', details.birthName);
-  setText('antragsteller.rufname_1', details.firstName);
+  setText('antragsteller.rufname_1', p1Names.ruf);
+  setText('antragsteller.vorname_1', p1Names.weitere);
   setText('antragsteller.gebort_1', details.birthCity);
   setText('antragsteller.gebland_1', details.birthCountry);
   setText('antragsteller.gebdatum_1', toGermanDate(details.dateOfBirth));
@@ -243,13 +266,15 @@ function fillSecondPerson(
     }
   };
 
+  const p2Names = splitFirstNames(p.firstName);
   selectDropdown(
     'antragsteller.familienmitglied_2',
     RELATIONSHIP_OPTION[p.relationship],
   );
   setText('antragsteller.familienname_2', p.familyName);
   setText('antragsteller.gebname_2', p.birthName);
-  setText('antragsteller.rufname_2', p.firstName);
+  setText('antragsteller.rufname_2', p2Names.ruf);
+  setText('antragsteller.vorname_2', p2Names.weitere);
   setText('antragsteller.gebort_2', p.birthCity);
   setText('antragsteller.gebland_2', p.birthCountry);
   setText('antragsteller.gebdatum_2', toGermanDate(p.dateOfBirth));
