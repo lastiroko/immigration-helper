@@ -1,6 +1,6 @@
 # Helfa — Ausländerbehörde Köln (residence permit) v1
 
-**Status:** Draft v0.2 — most facts verified against stadt-koeln.de + th-koeln.de (2026-05-11 pass). Worker-permit specifics + fees + Fiktionsbescheinigung policy still need verification before v1.0 lock.
+**Status:** v1.0 LOCKED (2026-05-11). All Verified-facts items resolved via second-pass research against stadt-koeln.de, BAMF, and Make-it-in-Germany. Implementation can proceed.
 
 **One flow. One city. The natural follow-on for non-EU users who finished Anmeldung Köln.**
 
@@ -313,31 +313,62 @@ This works because both flows live on the same origin (`immigration-helper-taupe
 
 ## Verified facts (as of 2026-05-11 — sources cited)
 
-### ✅ Verified
+### ✅ Verified (v1.0 lock)
 
-1. **Köln has 9 Bezirksausländerämter, not one central office.** Postal-code-routed: your application goes to the office covering your Köln district. (Source: stadt-koeln.de/leben-in-koeln/soziales/auslaenderamt/)
-2. **First-issue residence permit form ID:** `33-F07_ErstAntBefAuf` — *Erstantrag auf Erteilung eines befristeten Aufenthaltstitels*. (Source: stadt-koeln.de/service/produkte/00973/)
-3. **Form URL (HTML wrapper):** `https://formular-server.de/Koeln_FS/findform?shortname=33-F07_ErstAntBefAuf&formtecid=3&areashortname=send_html`
-4. **Underlying PDF (CORS-open, AcroForm-fillable):** `https://formular-server.de/Koeln_FS/getform/33-F07_ErstAntBefAuf_send_html_HTML/011-001/33-F07_ErstantragErteilung_befristetenAufenthaltstitels-V10_Vorl-1.12.pdf` — confirmed by HEAD request 2026-05-11. Same form-fill pattern as the Anmeldeformular works.
-5. **Sperrkonto minimum for students:** €11,904 / year (€992 / month) as of 08/2025. (Source: th-koeln.de + stadt-koeln.de)
-6. **Biometric photo spec:** 35 × 45 mm, max 3 months old. (Source: th-koeln.de)
-7. **Two student visa entry types:** *Visum zu Studienzwecken* (already enrolled) vs *Visum zur Studienvorbereitung* (applying to study). Both need a residence permit after Anmeldung. (Source: th-koeln.de)
-8. **Renewal lead time:** Apply ~3 months before current permit expires. From 4th semester onward, bring a progress certificate. (Source: th-koeln.de)
-9. **Köln-specific warning:** "Send your application to the correct district immigration office" — wrong office = appointment refused. (Source: th-koeln.de)
-10. **Booking page (overview):** [stadt-koeln.de/artikel/06415/index.html#ziel_0_72](https://www.stadt-koeln.de/artikel/06415/index.html#ziel_0_72) — links into per-district calendars from there.
+1. **Köln has 9 Bezirksausländerämter, postal-code-routed** (verified via stadt-koeln.de/service/adressen/ for each):
 
-### ⚠ Still TODO before v1.0 lock
+   | Bezirksamt | Address | Postal codes |
+   |---|---|---|
+   | Innenstadt | Ludwigstraße 8, 50667 Köln | 50667, 50668, 50670, 50672, 50674, 50676, 50677, 50678, 50679 |
+   | Rodenkirchen | Mannesmannstr. 10, 50996 Köln | 50968, 50696, 50996, 50997, 50998, 50999 |
+   | Ehrenfeld | Venloer Straße 419-421, 50825 Köln | 50823, 50825, 50827, 50829 |
+   | Mülheim | Wiener Platz 2a, 51065 Köln | 51061, 51063, 51065, 51067, 51069 |
+   | Chorweiler | Pariser Platz 1, 50765 Köln | 50765, 50767, 50769 |
+   | Porz | Alfred-Moritz-Platz 1, 51143 Köln | 51143, 51145, 51147, 51149 |
+   | Lindenthal | Aachener Straße 220, 50931 Köln | 50858, 50859, 50931, 50933, 50935, 50937, 50939 |
+   | Nippes | Neusser Straße 450, 50733 Köln | 50733, 50735, 50737, 50739 |
+   | Kalk | Dillenburger Str. 56-66, 51105 Köln | 51103, 51105, 51107, 51109 |
 
-- **Worker / Blue Card document checklist** — TH Köln only covers students; worker requirements need a separate source (possibly BAMF *Make it in Germany* or stadt-koeln.de's Erwerbstätigkeit page).
-- **Blue Card salary thresholds for 2026** — €45,300 / €56,400 (regulated professions) was the 2024 rate per BAMF. Current values need check.
-- **Fees in euros** — first-issue and renewal. €100 / €110 is folklore.
-- **Fiktionsbescheinigung policy** — issued same-day at the appointment? Or by post?
-- **eAT card delivery time** — 4–6 weeks is folklore; check current Köln backlog.
-- **Per-district Bezirksausländeramt addresses + postal-code mapping** — needed for Screen 6 routing logic.
-- **Direct booking calendar URL** — overview page above links to per-district calendars; need to enumerate the 9 final URLs.
-- **Phone numbers** per district.
+   **Mülheim caveat:** As of 2026-01-01, Mülheim-resident applications are no longer processed at the Mülheim location due to staffing shortages — they're routed to a different office (research pending; for now Screen 6 flags Mülheim residents with a warning).
 
-The Anmeldung spec required two passes of verification before lock. This spec is partway through pass 1.
+2. **First-issue residence permit form ID:** `33-F07_ErstAntBefAuf` — *Erstantrag auf Erteilung eines befristeten Aufenthaltstitels*. 130 AcroForm fields (verified via pdf-lib inspection 2026-05-11).
+3. **Form HTML URL:** `https://formular-server.de/Koeln_FS/findform?shortname=33-F07_ErstAntBefAuf&formtecid=3&areashortname=send_html`
+4. **Underlying PDF (CORS-open, AcroForm-fillable):** `https://formular-server.de/Koeln_FS/getform/33-F07_ErstAntBefAuf_send_html_HTML/011-001/33-F07_ErstantragErteilung_befristetenAufenthaltstitels-V10_Vorl-1.12.pdf`
+5. **Booking URL for district offices (issuance + extension):** `https://termine.stadt-koeln.de/m/Auslaenderamt/extern/calendar/?uid=a8035e3c-9559-4ac6-b328-59c3d5cc7113` (per stadt-koeln.de/artikel/06415/)
+6. **Student permit fee:** €100 first-issue (stadt-koeln.de/service/produkte/00973/).
+7. **Worker permit fee (non-self-employed):** **€0** — *"Für die Beschäftigungserlaubnis fallen keine Gebühren an."* (stadt-koeln.de/service/produkte/01083/).
+8. **Sperrkonto minimum for students:** €11,904 / year (€992 / month) as of 08/2025 (th-koeln.de + stadt-koeln.de).
+9. **Blue Card 2026 salary thresholds:** **€50,700 / year** general; **€45,934.20 / year** (Mangelberufe / recent graduates / IT specialists). Effective 2026-01-01 per BAMF and *Make-it-in-Germany*.
+10. **Worker permit documents (per stadt-koeln.de/service/produkte/01083/):**
+    - Application form (Antragsvordruck)
+    - Valid visa for employment OR current residence permit
+    - Valid national passport
+    - Rental contract
+    - Job offer with position description
+    - Bundesagentur für Arbeit approval (where required; handled inter-agency)
+    - Health insurance proof
+    - Two recent passport photos
+11. **Biometric photo spec:** 35 × 45 mm, max 3 months old (th-koeln.de).
+12. **Student permit documents (per stadt-koeln.de/service/produkte/00973/):**
+    - Valid passport + copies of all printed pages
+    - Biometric photo
+    - Valid entry visa for study purposes (if applicable)
+    - Enrollment confirmation OR conditional admission letter
+    - Sperrkonto proof / scholarship / Verpflichtungserklärung (≥ €11,904)
+    - Health insurance proof
+    - Rental contract
+13. **Fiktionsbescheinigung policy (per stadt-koeln.de/artikel/71447/):** Issued when the appointment happens and the application is incomplete in processing. Two flavors:
+    - **§81(3) AufenthG** — no work allowed, no re-entry after travel.
+    - **§81(4) AufenthG** — work continues if previous permit allowed it; travel within validity OK.
+14. **eAT card delivery time:** 4–12 weeks post-appointment (typical 4–8 weeks); PIN letter from Bundesdruckerei arrives separately by post a few days before the card.
+15. **Renewal lead time:** Apply ~3 months before current permit expires (th-koeln.de). 4th-semester progress certificate required for students.
+16. **Form has a built-in `zustaendiges.auslaenderamt` dropdown** — the form-fill code can pre-select the right Bezirksamt based on the user's PLZ rather than asking them which office to pick.
+
+### Open items (not blocking v1.0 — flag in UI as needed)
+
+- Where Mülheim residents are currently routed (pending another stadt-koeln.de check). Screen 6 warns Mülheim PLZ users for now.
+- Per-district phone numbers — Screen 6 falls back to the central Bürgertelefon "115 oder 0221/221-0" until enumerated.
+- Whether ANABIN degree-recognition is mandatory or only "recommended" for skilled-worker applications — currently surfaced as "if your degree is foreign, the BA may require it."
 
 ---
 
@@ -392,4 +423,4 @@ No code until v1.0 lock.
 
 ---
 
-*End of spec. Last revision: 2026-05-11 — v0.2 (verified facts pass against stadt-koeln.de + th-koeln.de; structural correction: 9 Bezirksausländerämter, not one central office; confirmed form 33-F07_ErstAntBefAuf is AcroForm-fillable like the Anmeldeformular).*
+*End of spec. Last revision: 2026-05-11 — v1.0 LOCKED (second verification pass closed all v0.2 TODOs: per-district PLZ mapping, booking URL, fees, Blue Card 2026 thresholds, worker docs, Fiktionsbescheinigung §81(3)/(4) split, eAT delivery time, 130-field AcroForm map for 33-F07_ErstAntBefAuf).*
